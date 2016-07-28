@@ -1,0 +1,1 @@
+node Start.js & pause & Start.bat
