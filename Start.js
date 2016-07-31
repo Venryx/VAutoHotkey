@@ -55,12 +55,12 @@ var CallMethod_Ext = edge.func({
 g.CallMethod = function(methodName, args___) {
     var methodArgs = V.Slice(arguments, 1);
     ProcessMethodArgs(methodArgs);
-    Log("Calling_Early) " + methodName + " Args: " + methodArgs.Select(a=>a.constructor.name).JoinUsing(","));
+    //Log("[JS]Calling) " + methodName + " Args: " + methodArgs.Select(a=>a.constructor.name).JoinUsing(","));
     var result = CallMethod_Ext({methodName: methodName, args: methodArgs}, true);
     if (result == "@@@NULL@@@")
         result = null;
     ProcessResult(result);
-    Log("Result3)" + result);
+    //Log("[JS]Returning result) " + result);
     return result;
 };
 
@@ -83,16 +83,12 @@ g.CallMethodAsync = function(methodName, args___) {
     //return CallMethodAsync_Ext({methodName: methodName, args: methodArgs}, ()=>{});
 
     var callback = methodArgs.splice(-1)[0] || ()=>{};
-
-    Log("Callback)" + callback);
-
-    Log("Calling_Early(Async)) " + methodName + " Args: " + methodArgs.Select(a=>a.constructor.name).JoinUsing(","));
-
     var callbackWrapper = function(result) {
         ProcessResult(result);
+        //Log("[JS]Returning async result) " + result);
         callback(result);
     };
-
+    //Log("[JS]Calling method async) " + methodName + " Args: " + methodArgs.Select(a=>a.constructor.name).JoinUsing(","));
     return CallMethodAsync_Ext({methodName: methodName, args: methodArgs, callback: callbackWrapper}, ()=>{});
 };
 
@@ -101,6 +97,14 @@ for (var methodName of g.API.methodNames) (function(methodName){
     g[methodName] = function(args___) { return g.CallMethod.apply(null, [methodName].concat(V.AsArray(arguments))); }
     g[methodName + "Async"] = function(args___) { return g.CallMethodAsync.apply(null, [methodName].concat(V.AsArray(arguments))); }
 })(methodName);
+// special ones
+g.CreateTrayIcon = function() {
+    /*var reloadFunc = function() {
+        process.exit(); // just exit; C# side will have already launched a new instance of the Start.bat batch file
+    };*/
+    var exitFunc = function() { process.exit(); };
+    return g.CallMethod.apply(null, ["CreateTrayIcon", exitFunc].concat(V.AsArray(arguments)));
+}
 
 fs = require("fs");
 // if UserScript does not exist, create it from default-file

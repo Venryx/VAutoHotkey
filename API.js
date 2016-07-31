@@ -1,4 +1,7 @@
 exports.methodNames = [
+    "ShowCMDWindow",
+    "HideCMDWindow",
+    "CreateTrayIcon",
     "AddGlobalHotkey",
     "IsProcessOpen",
     // to be created

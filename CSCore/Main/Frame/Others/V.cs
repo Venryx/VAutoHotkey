@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 public class Map_Dynamic : DynamicObject {
 	IDictionary<string, object> source;
 	public Map_Dynamic() : this(new ExpandoObject()) {}
-	public Map_Dynamic(dynamic source) { this.source = (IDictionary<string, object>)source; }
+	public Map_Dynamic(IDictionary<string, object> source) { this.source = source; }
 	public object GetProperty(string name) {
 		/*var type = _source.GetType();
 		var property = type.GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);

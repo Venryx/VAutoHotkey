@@ -39,12 +39,13 @@ public class Window {
 		GetProcessName = async nothing=>GetProcessName_();
 		GetProcessID = async nothing=>GetProcessID_();
 		GetThreadID = async nothing=>GetThreadID_();
+		IsVisible = async nothing=>IsVisible_();
 	}
 
 	public IntPtr handle;
 	public Func<object, Task<object>> Show;
 	public bool Show_() {
-		Log("Showing window:" + handle);
+		//Log("Showing window:" + handle);
 		ShowWindow(handle, WindowShowStyle.Show);
 		/*var style = (WindowStyles)GetWindowLongPtr(handle, 0);
 		style |= WindowStyles.WS_VISIBLE;
@@ -53,13 +54,13 @@ public class Window {
 	}
 	public Func<object, Task<object>> Hide;
 	public bool Hide_() {
-		Log("Hiding window:" + handle);
+		//Log("Hiding window:" + handle);
 		ShowWindow(handle, WindowShowStyle.Hide);
 		return true;
 	}
 	public Func<object, Task<object>> Activate;
 	public bool Activate_() {
-		Log("Activating window:" + handle);
+		//Log("Activating window:" + handle);
 		SetForegroundWindow(handle);
 		return true;
 	}
@@ -177,4 +178,9 @@ public class Window {
 	static extern bool CloseHandle(IntPtr hObject);
 
 	//[DllImport("kernel32.dll", SetLastError = true)] static extern bool QueryFullProcessImageName([In] IntPtr hProcess, [In] int dwFlags, [Out] StringBuilder lpExeName, ref int lpdwSize);
+
+	public Func<object, Task<object>> IsVisible;
+	public bool IsVisible_() { return IsWindowVisible(handle); }
+
+	[DllImport("user32", SetLastError = true)] static extern bool IsWindowVisible(IntPtr windowHandle);
 }

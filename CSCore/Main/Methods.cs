@@ -1,11 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Dynamic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Forms.VisualStyles;
 using Gma.UserActivityMonitor;
 using static V;
 
@@ -126,7 +130,7 @@ public static class Methods {
 		return windows.FirstOrDefault();
 	}
 	public static List<Window> GetWindows(dynamic options) {
-		var searchType = options.searchType ?? SearchType.EnumWindows;
+		var searchType = (SearchType?)options.searchType ?? SearchType.EnumWindows;
 		var processPath = (string)options.processPath;
 		var process = (string)options.process;
 		var processID = (int?)options.processID ?? -1;
@@ -158,4 +162,68 @@ public static class Methods {
 	}
 
 	[DllImport("user32.dll")] static extern IntPtr FindWindow(string className, string text);
+
+	//static Window cmdWindow;
+	public static void ShowCMDWindow() {
+		var cmdProcess = Process.GetCurrentProcess().GetParentProcess();
+		/*if (cmdWindow == null)
+			cmdWindow = new Window(cmdProcess.MainWindowHandle);*/
+		var cmdWindow = GetWindow(new Map_Dynamic(new Map {{"processID", cmdProcess.Id}}));
+		cmdWindow.Show_();
+	}
+	public static void HideCMDWindow() {
+		var cmdProcess = Process.GetCurrentProcess().GetParentProcess();
+		/*if (cmdWindow == null)
+			cmdWindow = new Window(cmdProcess.MainWindowHandle);*/
+		var cmdWindow = GetWindow(new Map_Dynamic(new Map {{"processID", cmdProcess.Id}}));
+		cmdWindow.Hide_();
+	}
+
+	static NotifyIcon trayIcon;
+	//public static void CreateTrayIcon(Func<object, Task<object>> reload, Func<object, Task<object>> exit) {
+	public static void CreateTrayIcon(Func<object, Task<object>> exit) {
+		var notifyThread = new Thread(()=>{
+			var icon = new NotifyIcon();
+			icon.Icon = Icon.ExtractAssociatedIcon(FileManager.csCore.GetFile("Icon_x16.ico").FullName);
+			icon.Visible = true;
+			icon.Text = "UserScript.js";
+			icon.ContextMenu = new ContextMenu(new []{
+				new MenuItem("Hide CMD Window", (sender, e)=> {
+					if (icon.ContextMenu.MenuItems[0].Text == "Show CMD Window")
+						ShowCMDWindow();
+					else
+						HideCMDWindow();
+					UpdateTrayIconMenuItems();
+				}),
+				new MenuItem("-"), 
+				new MenuItem("Reload script", (sender, e)=> {
+					Process.Start(FileManager.GetFile("Start.lnk").FullName);
+
+					var cmdProcess = Process.GetCurrentProcess().GetParentProcess();
+					cmdProcess.Kill();
+					//reload(null);
+					exit(null);
+				}),
+				new MenuItem("Edit script", (sender, e)=> {
+					Process.Start(FileManager.GetFile("UserScript.js").FullName);
+				}),
+				new MenuItem("Open script folder", (sender, e)=> { Process.Start("explorer.exe", FileManager.root.FullName); }),
+				new MenuItem("-"),
+				new MenuItem("Exit", (sender, e)=> {
+					var cmdProcess = Process.GetCurrentProcess().GetParentProcess();
+					cmdProcess.Kill(); // kill cmd
+					exit(null); // kill node
+					//Application.Exit(); // (we're in node process, so no need to kill self)
+				})
+			});
+			trayIcon = icon;
+			UpdateTrayIconMenuItems();
+			Application.Run();
+		});
+		notifyThread.Start();
+	}
+	static void UpdateTrayIconMenuItems() {
+		var cmdProcess = Process.GetCurrentProcess().GetParentProcess();
+		trayIcon.ContextMenu.MenuItems[0].Text = !new Window(cmdProcess.MainWindowHandle).IsVisible_() ? "Show CMD Window" : "Hide CMD Window";
+	}
 }

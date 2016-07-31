@@ -13,7 +13,6 @@ public class Main_NodeJSEntryPoint {
 	// this is the only entry point for calls from NodeJS; so add to queue, and have the processing occur on background thread
 	public async Task<object> CallMethod(dynamic invokeArgs) {
 		var result = Main.CallMethod(invokeArgs);
-		Log("Result2:" + result);
 		return result;
 	}
 	public async Task<object> CallMethodAsync(dynamic invokeArgs) {
@@ -65,10 +64,10 @@ public static class Main {
 			Application.DoEvents(); // process input-events
 			//while (callMethodQueue.Count > 0) {
 			if (callMethodQueue.Count > 0) {
-				Log("Test200");
 				var entry = callMethodQueue.Dequeue();
+				//Log("Calling method async) " + entry.methodName + " Args: " + entry.args.Select(a=>a.GetType().Name).JoinUsing(","));
 				var result = CallMethod_Internal(entry.methodName, entry.args);
-				Log("Calling callback with result)" + result + " @methodname:" + entry.methodName);
+				//Log("Returning async result) " + result + " @methodname:" + entry.methodName);
 				entry.callback(result);
 			}
 			Thread.Sleep(4); // sleeping too long, e.g. 10ms will result in touch events arriving several seconds delayed due to event overload
@@ -76,13 +75,13 @@ public static class Main {
 	}
 
 	static object CallMethod_Internal(string methodName, object[] args) {
-		Console.WriteLine("Calling) " + methodName + " Args: " + args.Select(a=>a.GetType().Name).JoinUsing(","));
+		Log("Calling method) " + methodName + " Args: " + args.Select(a=>a.GetType().Name).JoinUsing(","));
 		try {
 			var newArgs = new List<object>();
 			foreach (var arg in args)
 				if (arg is ExpandoObject)
 					//newArgs.Add((IDictionary<string, object>)arg);
-					newArgs.Add(new Map_Dynamic(arg));
+					newArgs.Add(new Map_Dynamic(arg as ExpandoObject));
 				else
 					newArgs.Add(arg);
 			args = newArgs.ToArray();
@@ -96,13 +95,13 @@ public static class Main {
 			var result = methods[methodName].Invoke(null, args);
 			if (result == null)
 				result = "@@@NULL@@@";
-			Log("Result:" + result);
+			Log("Returning result) " + result);
 			return result;
 		}
 		catch (TargetInvocationException ex) {
-			V.LogInnerExceptionOf(ex);
+			LogInnerExceptionOf(ex);
 			return null;
-			/*V.RethrowInnerExceptionOf(ex);
+			/*RethrowInnerExceptionOf(ex);
 			throw null; // this never actually runs, but lets method compile*/
 		}
 	}
