@@ -34,4 +34,9 @@ exports.V = new function() {
         while(new Date().getTime() < endTime) {
         }
     };
+
+    s.GetStackTraceStr = function() {
+		var result = new Error().stack;
+		return result.substr(result.IndexOf_X(1, "\n")); // remove "Error" line and first stack-frame (that of this method)
+	};
 };

@@ -35,7 +35,7 @@ namespace Gma.UserActivityMonitor {
 		static HookProc s_MouseDelegate;
 
 		/// <summary>Stores the handle to the mouse hook procedure.</summary>
-		static int s_MouseHookHandle;
+		static IntPtr s_MouseHookHandle;
 
 		static int m_OldX;
 		static int m_OldY;
@@ -158,9 +158,9 @@ namespace Gma.UserActivityMonitor {
 			return CallNextHookEx(s_MouseHookHandle, nCode, wParam, lParam);
 		}
 
-		static void EnsureSubscribedToGlobalMouseEvents() {
+		public static void EnsureSubscribedToGlobalMouseEvents() {
 			// install Mouse hook only if it is not installed and must be installed
-			if (s_MouseHookHandle == 0) {
+			if (s_MouseHookHandle == IntPtr.Zero) {
 				//See comment of this field. To avoid GC to clean it up.
 				s_MouseDelegate = MouseHookProc;
 
@@ -169,7 +169,7 @@ namespace Gma.UserActivityMonitor {
 				s_MouseHookHandle = SetWindowsHookEx(WH_MOUSE_LL, s_MouseDelegate, moduleHandle, 0);
 
 				//If SetWindowsHookEx fails.
-				if (s_MouseHookHandle == 0) {
+				if (s_MouseHookHandle == IntPtr.Zero) {
 					//Returns the error code returned by the last unmanaged function called using platform invoke that has the DllImportAttribute.SetLastError flag set.
 					int errorCode = Marshal.GetLastWin32Error();
 					//do cleanup
@@ -187,11 +187,11 @@ namespace Gma.UserActivityMonitor {
 		}
 
 		public static void ForceUnsunscribeFromGlobalMouseEvents() {
-			if (s_MouseHookHandle != 0) {
+			if (s_MouseHookHandle != IntPtr.Zero) {
 				//uninstall hook
 				int result = UnhookWindowsHookEx(s_MouseHookHandle);
 				//reset invalid handle
-				s_MouseHookHandle = 0;
+				s_MouseHookHandle = IntPtr.Zero;
 				//Free up for GC
 				s_MouseDelegate = null;
 				//if failed and exception must be thrown
@@ -214,7 +214,7 @@ namespace Gma.UserActivityMonitor {
 		static HookProc s_KeyboardDelegate;
 
 		/// <summary>Stores the handle to the Keyboard hook procedure.</summary>
-		static int s_KeyboardHookHandle;
+		static IntPtr s_KeyboardHookHandle;
 
 		/// <summary>A callback function which will be called every Time a keyboard activity detected.</summary>
 		/// <param name = "nCode">[in] Specifies whether the hook procedure must process the message. If nCode is HC_ACTION, the
@@ -228,7 +228,7 @@ namespace Gma.UserActivityMonitor {
 		///     returns; otherwise, other applications that have installed WH_CALLWNDPROC hooks will not receive hook notifications
 		///     and may behave incorrectly as a result. If the hook procedure does not call CallNextHookEx, the return value should
 		///     be zero.</returns>
-		static int KeyboardHookProc(int nCode, Int32 wParam, IntPtr lParam) {
+		static int KeyboardHookProc(int nCode, int wParam, IntPtr lParam) {
 			//indicates if any of underlaing events set e.Handled flag
 			bool handled = false;
 
@@ -245,8 +245,8 @@ namespace Gma.UserActivityMonitor {
 
 				// raise KeyPress
 				if (s_KeyPress != null && wParam == WM_KEYDOWN) {
-					bool isDownShift = ((GetKeyState(VK_SHIFT) & 0x80) == 0x80 ? true : false);
-					bool isDownCapslock = (GetKeyState(VK_CAPITAL) != 0 ? true : false);
+					bool isDownShift = (GetKeyState(VK_SHIFT) & 0x80) == 0x80;
+					bool isDownCapslock = GetKeyState(VK_CAPITAL) != 0;
 
 					byte[] keyState = new byte[256];
 					GetKeyboardState(keyState);
@@ -282,9 +282,9 @@ namespace Gma.UserActivityMonitor {
 			return CallNextHookEx(s_KeyboardHookHandle, nCode, wParam, lParam);
 		}
 
-		static void EnsureSubscribedToGlobalKeyboardEvents() {
+		public static void EnsureSubscribedToGlobalKeyboardEvents() {
 			// install Keyboard hook only if it is not installed and must be installed
-			if (s_KeyboardHookHandle == 0) {
+			if (s_KeyboardHookHandle == IntPtr.Zero) {
 				//See comment of this field. To avoid GC to clean it up.
 				s_KeyboardDelegate = KeyboardHookProc;
 				//install hook
@@ -292,7 +292,7 @@ namespace Gma.UserActivityMonitor {
 				s_KeyboardHookHandle = SetWindowsHookEx(WH_KEYBOARD_LL, s_KeyboardDelegate, moduleHandle, 0);
 
 				//If SetWindowsHookEx fails.
-				if (s_KeyboardHookHandle == 0) {
+				if (s_KeyboardHookHandle == IntPtr.Zero) {
 					//Returns the error code returned by the last unmanaged function called using platform invoke that has the DllImportAttribute.SetLastError flag set.
 					int errorCode = Marshal.GetLastWin32Error();
 					//do cleanup
@@ -310,11 +310,11 @@ namespace Gma.UserActivityMonitor {
 		}
 
 		public static void ForceUnsunscribeFromGlobalKeyboardEvents() {
-			if (s_KeyboardHookHandle != 0) {
+			if (s_KeyboardHookHandle != IntPtr.Zero) {
 				// uninstall hook
 				int result = UnhookWindowsHookEx(s_KeyboardHookHandle);
 				// reset invalid handle
-				s_KeyboardHookHandle = 0;
+				s_KeyboardHookHandle = IntPtr.Zero;
 				// free up for GC
 				s_KeyboardDelegate = null;
 				// if failed and exception must be thrown

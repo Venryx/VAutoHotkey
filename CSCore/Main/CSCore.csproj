@@ -29,6 +29,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -42,6 +45,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Frame\Others\ClassExtensions.cs" />
+    <Compile Include="Frame\Others\WindowEnums.cs" />
+    <Compile Include="Frame\Others\Windows.cs" />
     <Compile Include="HookManager\GlobalEventProvider.cs" />
     <Compile Include="HookManager\HookManager.Callbacks.cs" />
     <Compile Include="HookManager\HookManager.cs" />
@@ -51,7 +56,7 @@
     <Compile Include="Methods.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="V.cs" />
+    <Compile Include="Frame\Others\V.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,0 +1,71 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'C:\\Program Files\\NodeJS\\node.exe',
+1 verbose cli   'C:\\Users\\Stephen\\AppData\\Roaming\\npm\\node_modules\\npm\\bin\\npm-cli.js',
+1 verbose cli   'install',
+1 verbose cli   'global-shortcut' ]
+2 info using npm@2.1.5
+3 info using node@v5.8.0
+4 silly cache add args [ 'global-shortcut', null ]
+5 verbose cache add spec global-shortcut
+6 silly cache add parsed spec Result {
+6 silly cache add   raw: 'global-shortcut',
+6 silly cache add   scope: null,
+6 silly cache add   name: 'global-shortcut',
+6 silly cache add   rawSpec: '',
+6 silly cache add   spec: '*',
+6 silly cache add   type: 'range' }
+7 verbose addNamed global-shortcut@*
+8 silly addNamed semver.valid null
+9 silly addNamed semver.validRange *
+10 silly addNameRange { name: 'global-shortcut', range: '*', hasData: false }
+11 verbose mapToRegistry name global-shortcut
+12 verbose mapToRegistry uri https://registry.npmjs.org/global-shortcut
+13 verbose addNameRange registry:https://registry.npmjs.org/global-shortcut not in flight; fetching
+14 verbose request on initialization, where is /global-shortcut
+15 verbose request after pass 1, where is /global-shortcut
+16 verbose request url raw /global-shortcut
+17 verbose request resolving registry [ 'https://registry.npmjs.org/', './global-shortcut' ]
+18 verbose request after pass 2, where is https://registry.npmjs.org/global-shortcut
+19 verbose request no auth needed
+20 info attempt registry request try #1 at 6:09:20 AM
+21 verbose request id dbae44fdf2669189
+22 http request GET https://registry.npmjs.org/global-shortcut
+23 http 404 https://registry.npmjs.org/global-shortcut
+24 silly registry.get cb [ 404,
+24 silly registry.get   { 'content-type': 'application/json',
+24 silly registry.get     'cache-control': 'max-age=0',
+24 silly registry.get     'content-length': '2',
+24 silly registry.get     'accept-ranges': 'bytes',
+24 silly registry.get     date: 'Sat, 30 Jul 2016 13:09:20 GMT',
+24 silly registry.get     via: '1.1 varnish',
+24 silly registry.get     age: '0',
+24 silly registry.get     connection: 'close',
+24 silly registry.get     'x-served-by': 'cache-sea1923-SEA',
+24 silly registry.get     'x-cache': 'MISS',
+24 silly registry.get     'x-cache-hits': '0',
+24 silly registry.get     'x-timer': 'S1469884160.482020,VS0,VE97',
+24 silly registry.get     vary: 'Accept-Encoding' } ]
+25 verbose stack Error: Not Found
+25 verbose stack     at errorResponse (C:\Users\Stephen\AppData\Roaming\npm\node_modules\npm\lib\cache\add-named.js:269:10)
+25 verbose stack     at setData (C:\Users\Stephen\AppData\Roaming\npm\node_modules\npm\lib\cache\add-named.js:212:12)
+25 verbose stack     at RES (C:\Users\Stephen\AppData\Roaming\npm\node_modules\npm\node_modules\inflight\inflight.js:23:14)
+25 verbose stack     at f (C:\Users\Stephen\AppData\Roaming\npm\node_modules\npm\node_modules\once\once.js:17:25)
+25 verbose stack     at saved (C:\Users\Stephen\AppData\Roaming\npm\node_modules\npm\node_modules\npm-registry-client\lib\get.js:167:7)
+25 verbose stack     at FSReqWrap.oncomplete (fs.js:82:15)
+26 verbose statusCode 404
+27 verbose pkgid global-shortcut
+28 verbose cwd C:\Root\Apps\Control\@V\VAutoHotkey
+29 error Windows_NT 10.0.10586
+30 error argv "C:\\Program Files\\NodeJS\\node.exe" "C:\\Users\\Stephen\\AppData\\Roaming\\npm\\node_modules\\npm\\bin\\npm-cli.js" "install" "global-shortcut"
+31 error node v5.8.0
+32 error npm  v2.1.5
+33 error code E404
+34 error 404 Not Found
+34 error 404
+34 error 404 'global-shortcut' is not in the npm registry.
+34 error 404 You should bug the author to publish it (or use the name yourself!)
+34 error 404 It was specified as a dependency of 'robotjs'
+34 error 404
+34 error 404 Note that you can also install from a
+34 error 404 tarball, folder, http url, or git url.
+35 verbose exit [ 1, true ]

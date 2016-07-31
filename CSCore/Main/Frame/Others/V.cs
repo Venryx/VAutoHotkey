@@ -1,11 +1,36 @@
 using System;
+using System.Collections.Generic;
+using System.Dynamic;
 using System.Reflection;
 using System.Runtime.InteropServices;
+
+public class Map_Dynamic : DynamicObject {
+	IDictionary<string, object> source;
+	public Map_Dynamic() : this(new ExpandoObject()) {}
+	public Map_Dynamic(dynamic source) { this.source = (IDictionary<string, object>)source; }
+	public object GetProperty(string name) {
+		/*var type = _source.GetType();
+		var property = type.GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		return property?.GetValue(_source, null);*/
+		return source.GetValueOrX(name);
+	}
+	public override bool TryGetMember(GetMemberBinder binder, out object result) {
+		result = GetProperty(binder.Name);
+		return true;
+	}
+	public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result) {
+		result = GetProperty((string)indexes[0]);
+		return true;
+	}
+
+	public static implicit operator Dictionary<string, object>(Map_Dynamic s) { return new Dictionary<string, object>(s.source); } 
+}
 
 public static class V {
 	// general
 	// ==========
 
+	public static void Nothing() {}
 	public static void Log(string message) { Console.WriteLine(message); }
 
 	// exception rethrowing

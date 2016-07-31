@@ -8,3 +8,8 @@ C:\Root\Apps\Control\@V\VRobotJS\Usage1\CSCore\Main\bin\Debug\CSCore.pdb
 C:\Root\Apps\Control\@V\VRobotJS\Usage1\CSCore\Main\obj\Debug\CSCore.csprojResolveAssemblyReference.cache
 C:\Root\Apps\Control\@V\VRobotJS\Usage1\CSCore\Main\obj\Debug\CSCore.dll
 C:\Root\Apps\Control\@V\VRobotJS\Usage1\CSCore\Main\obj\Debug\CSCore.pdb
+C:\Root\Apps\Control\@V\VAutoHotkey\CSCore\Main\bin\Debug\CSCore.pdb
+C:\Root\Apps\Control\@V\VAutoHotkey\CSCore\Main\obj\Debug\CSCore.csprojResolveAssemblyReference.cache
+C:\Root\Apps\Control\@V\VAutoHotkey\CSCore\Main\obj\Debug\CSCore.pdb
+C:\Root\Apps\Control\@V\VAutoHotkey\CSCore\Main\bin\Debug\CSCore.dll
+C:\Root\Apps\Control\@V\VAutoHotkey\CSCore\Main\obj\Debug\CSCore.dll

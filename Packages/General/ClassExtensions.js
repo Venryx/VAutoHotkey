@@ -295,4 +295,4 @@ Array.prototype._AddFunction_Inline = function Distinct()
 			result.push(this[i]);
 	return result;
 };
-//Array.prototype._AddFunction_Inline = function JoinUsing(separator) { return this.join(separator);};
+Array.prototype._AddFunction_Inline = function JoinUsing(separator) { return this.join(separator); };

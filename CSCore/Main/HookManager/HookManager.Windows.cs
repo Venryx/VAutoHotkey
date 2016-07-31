@@ -96,7 +96,7 @@ namespace Gma.UserActivityMonitor {
 		/// <remarks>http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/windowing/hooks/hookreference/hookfunctions/setwindowshookex.asp</remarks>
 		[DllImport("user32.dll", CharSet = CharSet.Auto,
 			CallingConvention = CallingConvention.StdCall)] static extern int CallNextHookEx(
-			int idHook,
+			IntPtr idHook,
 			int nCode,
 			int wParam,
 			IntPtr lParam);
@@ -120,7 +120,7 @@ namespace Gma.UserActivityMonitor {
 		///     return value is NULL. To get extended error information, call GetLastError.</returns>
 		/// <remarks>http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/windowing/hooks/hookreference/hookfunctions/setwindowshookex.asp</remarks>
 		[DllImport("user32.dll", CharSet = CharSet.Auto,
-			CallingConvention = CallingConvention.StdCall, SetLastError = true)] static extern int SetWindowsHookEx(
+			CallingConvention = CallingConvention.StdCall, SetLastError = true)] static extern IntPtr SetWindowsHookEx(
 			int idHook,
 			HookProc lpfn,
 			IntPtr hMod,
@@ -134,7 +134,7 @@ namespace Gma.UserActivityMonitor {
 		///     extended error information, call GetLastError.</returns>
 		/// <remarks>http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/windowing/hooks/hookreference/hookfunctions/setwindowshookex.asp</remarks>
 		[DllImport("user32.dll", CharSet = CharSet.Auto,
-			CallingConvention = CallingConvention.StdCall, SetLastError = true)] static extern int UnhookWindowsHookEx(int idHook);
+			CallingConvention = CallingConvention.StdCall, SetLastError = true)] static extern int UnhookWindowsHookEx(IntPtr idHook);
 
 		/// <summary>The GetDoubleClickTime function retrieves the current double-click time for the mouse. A double-click is a
 		///     series of two clicks of the mouse button, the second occurring within a specified time after the first. The
