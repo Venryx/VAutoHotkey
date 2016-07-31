@@ -50,6 +50,7 @@
     <Compile Include="Frame\Others\FileManager.cs" />
     <Compile Include="Frame\Others\WindowEnums.cs" />
     <Compile Include="Frame\Others\Windows.cs" />
+    <Compile Include="Frame\VTypeInfo.cs" />
     <Compile Include="HookManager\GlobalEventProvider.cs" />
     <Compile Include="HookManager\HookManager.Callbacks.cs" />
     <Compile Include="HookManager\HookManager.cs" />

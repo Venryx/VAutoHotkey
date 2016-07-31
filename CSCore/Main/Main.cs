@@ -9,6 +9,8 @@ using System.Windows.Forms;
 using Gma.UserActivityMonitor;
 using static V;
 
+//using Map = System.Collections.Generic.Dictionary<string, object>;
+
 public class Main_NodeJSEntryPoint {
 	// this is the only entry point for calls from NodeJS; so add to queue, and have the processing occur on background thread
 	public async Task<object> CallMethod(dynamic invokeArgs) {
@@ -74,17 +76,23 @@ public static class Main {
 		}
 	}
 
+	public static object[] ProcessArgs(object args) { return ProcessArgs(args as object[]); }
+	public static object[] ProcessArgs(object[] args) {
+		var newArgs = new List<object>();
+		foreach (var arg in args)
+			newArgs.Add(ProcessArg(arg));
+		return newArgs.ToArray();
+	}
+	public static object ProcessArg(object arg) {
+		if (arg is ExpandoObject)
+			//return (IDictionary<string, object>)arg;
+			return new Map_Dynamic((ExpandoObject)arg);
+		return arg;
+	}
 	static object CallMethod_Internal(string methodName, object[] args) {
 		Log("Calling method) " + methodName + " Args: " + args.Select(a=>a.GetType().Name).JoinUsing(","));
 		try {
-			var newArgs = new List<object>();
-			foreach (var arg in args)
-				if (arg is ExpandoObject)
-					//newArgs.Add((IDictionary<string, object>)arg);
-					newArgs.Add(new Map_Dynamic(arg as ExpandoObject));
-				else
-					newArgs.Add(arg);
-			args = newArgs.ToArray();
+			args = ProcessArgs(args);
 
 			/*if (args.Length > methods[methodName].GetParameters().Length)
 				args = args.Take(methods[methodName].GetParameters().Length).ToArray();*/

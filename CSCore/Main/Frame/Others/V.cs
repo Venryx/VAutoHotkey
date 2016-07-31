@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using static V;
+
+//using Map = System.Collections.Generic.Dictionary<string, object>; // (use this instead of the below)
+//public class Map : Dictionary<string, object> {}
 
 public class Map_Dynamic : DynamicObject {
 	IDictionary<string, object> source;

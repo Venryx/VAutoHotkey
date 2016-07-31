@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Dynamic;
 using System.IO;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
@@ -8,7 +10,10 @@ using System.Security;
 using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using static V;
+
+using Map = System.Collections.Generic.Dictionary<string, object>;
 
 public static class Windows {
 	[DllImport("user32.dll")]
@@ -30,16 +35,35 @@ public static class Windows {
 public class Window {
 	public Window(IntPtr handle) {
 		this.handle = handle;
-		Show = async nothing=>Show_();
-		Hide = async nothing=>Hide_();
-		Activate = async nothing=>Activate_();
-		GetText = async nothing=>GetText_();
-		GetClass = async nothing=>GetClass_();
-		GetProcessPath = async nothing=>GetProcessPath_();
-		GetProcessName = async nothing=>GetProcessName_();
-		GetProcessID = async nothing=>GetProcessID_();
-		GetThreadID = async nothing=>GetThreadID_();
-		IsVisible = async nothing=>IsVisible_();
+		Show = async args=>Show_();
+		Hide = async args=>Hide_();
+		Activate = async args=>Activate_();
+		GetText = async args=>GetText_();
+		GetClass = async args=>GetClass_();
+		GetProcessPath = async args=>GetProcessPath_();
+		GetProcessName = async args=>GetProcessName_();
+		GetProcessID = async args=>GetProcessID_();
+		GetThreadID = async args=>GetThreadID_();
+		IsVisible = async args=>IsVisible_();
+		SetPosition = async args=>SetPosition_(Main.ProcessArgs(args)[0]);
+		SetSize = async args=>SetSize_(Main.ProcessArgs(args)[0]);
+		SetPositionAndSize = async args=>SetPositionAndSize_(Main.ProcessArgs(args)[0]);
+		/*var typeInfo = VTypeInfo.Get(typeof(Window));
+		foreach (var method in typeInfo.methods.Values) {
+			if (method.memberInfo.Name.EndsWith("_")) {
+				var prop = typeInfo.props[method.memberInfo.Name.Substring(0, method.memberInfo.Name.Length - 1)];
+				if (prop.GetValue(this) == null)
+					prop.SetValue(this, (Func<object, Task<object>>)(async options=> {
+						await Task.Delay(0); // hide VS warning
+						if (method.memberInfo.GetParameters().Length == 0)
+							return method.Call(this);
+						if (method.memberInfo.GetParameters().Length == 1 && method.memberInfo.GetParameters()[0].ParameterType == typeof(DynamicObject))
+							return method.Call(this, options);
+						throw new Exception($"NodeJS-accessible prop does not exist for method '{method.memberInfo.Name}'.");
+					}));
+			}
+		}*/
+
 	}
 
 	public IntPtr handle;
@@ -183,4 +207,63 @@ public class Window {
 	public bool IsVisible_() { return IsWindowVisible(handle); }
 
 	[DllImport("user32", SetLastError = true)] static extern bool IsWindowVisible(IntPtr windowHandle);
+
+	public Func<object, Task<object>> SetPosition;
+	public bool SetPosition_(dynamic options) {
+		/*var optionsMap = new Map {{"x", (int?)options.x ?? -1}, {"y", (int?)options.y ?? -1}};
+		return SetPositionAndSize_(new Map_Dynamic(optionsMap));*/
+		var x = (int?)options.x ?? -1;
+		var y = (int?)options.y ?? -1;
+		bool worked = SetWindowPos(handle, SpecialWindowHandles.NoTopMost, x, y, 0, 0, SetWindowPosFlags.NOSIZE);
+		if (!worked) throw new Win32Exception();
+		return true;
+	}
+	public Func<object, Task<object>> SetSize;
+	public bool SetSize_(dynamic options) {
+		var width = (int?)options.width ?? -1;
+		var height = (int?)options.height ?? -1;
+		bool worked = SetWindowPos(handle, SpecialWindowHandles.NoTopMost, 0, 0, width, height, SetWindowPosFlags.NOREPOSITION);
+		if (!worked) throw new Win32Exception();
+		return true;
+	}
+	public Func<object, Task<object>> SetPositionAndSize;
+	public bool SetPositionAndSize_(dynamic options) {
+		var x = (int?)options.x ?? -1;
+		var y = (int?)options.y ?? -1;
+		var width = (int?)options.width ?? -1;
+		var height = (int?)options.height ?? -1;
+		//bool worked = MoveWindow(handle, x, y, width, height, false);
+		bool worked = SetWindowPos(handle, IntPtr.Zero, x, y, width, height, 0);
+		if (!worked) throw new Win32Exception();
+		return true;
+	}
+
+	//[DllImport("user32.dll", SetLastError = true)] static extern bool MoveWindow(IntPtr hWnd, int x, int y, int width, int height, bool repaint);
+	[DllImport("user32.dll", SetLastError = true)]
+	static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, SetWindowPosFlags uFlags);
+	/// <summary>Window handles (HWND) used for hWndInsertAfter</summary>
+	public static class SpecialWindowHandles {
+		public static IntPtr
+		NoTopMost = new IntPtr(-2),
+		TopMost = new IntPtr(-1),
+		Top = new IntPtr(0),
+		Bottom = new IntPtr(1);
+	}
+	public enum SetWindowPosFlags {
+		NOSIZE = 0x0001,
+		NOMOVE = 0x0002,
+		NOZORDER = 0x0004,
+		NOREDRAW = 0x0008,
+		NOACTIVATE = 0x0010,
+		DRAWFRAME = 0x0020,
+		FRAMECHANGED = 0x0020,
+		SHOWWINDOW = 0x0040,
+		HIDEWINDOW = 0x0080,
+		NOCOPYBITS = 0x0100,
+		NOOWNERZORDER = 0x0200,
+		NOREPOSITION = 0x0200,
+		NOSENDCHANGING = 0x0400,
+		DEFERERASE = 0x2000,
+		ASYNCWINDOWPOS = 0x4000
+	}
 }

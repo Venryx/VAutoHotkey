@@ -33,14 +33,15 @@ function ProcessResult(obj) {
         else*/ if (obj[prop] instanceof Function) {
             var innerFunc = obj[prop];
             obj[prop] = function() {
-                var methodArgs = V.Slice(arguments, 1);
+                var methodArgs = V.AsArray(arguments);
                 ProcessMethodArgs(methodArgs);
-                Log("Calling_Early_2) " + methodName + " Args: " + methodArgs.Select(a=>a.constructor.name).JoinUsing(","));
-                var result = innerFunc({methodName: methodName, args: methodArgs}, true);
+                //Log("Calling_Early_2) " + methodName + " Args: " + methodArgs.Select(a=>a.constructor.name).JoinUsing(","));
+                //var result = innerFunc({methodName: methodName, args: methodArgs}, true);
+                var result = innerFunc(methodArgs, true);
                 if (result == "@@@NULL@@@")
                     result = null;
                 ProcessResult(result);
-                Log("Result4)" + result);
+                //Log("Result4)" + result);
                 return result;
             }
         }

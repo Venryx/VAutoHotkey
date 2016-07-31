@@ -24,7 +24,8 @@ public static class Methods {
 	// KeyPress, KeyUp, KeyDown
 
 	static Dictionary<string, Keys> keyNameOverrides = new Dictionary<string, Keys> {
-		{"Control", Keys.ControlKey}, {"Shift", Keys.ShiftKey}, {"Alt", Keys.Menu}
+		{"Control", Keys.ControlKey}, {"Shift", Keys.ShiftKey}, {"Alt", Keys.Menu},
+		{"`", Keys.Oemtilde}, {"~", Keys.Oemtilde},
 	};
 	static Dictionary<Keys, Keys> keySimplifications = new Dictionary<Keys, Keys> {
 		{Keys.Control, Keys.ControlKey}, {Keys.LControlKey, Keys.ControlKey}, {Keys.RControlKey, Keys.ControlKey},
@@ -90,7 +91,7 @@ public static class Methods {
 		var onDown = (Func<object, Task<object>>)options.onDown;
 		var onUp = (Func<object, Task<object>>)options.onUp;
 
-		var keys = keysStr.Split('+').Select(a=>keyNameOverrides.GetValueOrX(a, ParseEnum<Keys>(a))).ToList();
+		var keys = keysStr.Split('+').Select(a=>keyNameOverrides.GetValueOrXNullable(a, null) ?? ParseEnum<Keys>(a)).ToList();
 		foreach (var key in keys)
 			if (!keyDowns.ContainsKey(key))
 				keyDowns[key] = false;

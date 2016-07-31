@@ -30,6 +30,14 @@ public static class ClassExtensions {
 		return defaultValueX;
 	}
 
+	// IDictionary<TKey, TValue of struct> (e.g. IDictionary<string, bool>)
+	public static TValue? GetValueOrXNullable<TKey, TValue>(this IDictionary<TKey, TValue> obj, TKey key, TValue? defaultValueX = default(TValue?)) where TValue : struct {
+		TValue result;
+		if (obj.TryGetValue(key, out result))
+			return result;
+		return null;
+	}
+
 	// DirectoryInfo
 	public static DirectoryInfo VCreate(this DirectoryInfo folder) { folder.Create(); return folder; }
 	public static DirectoryInfo GetFolder(this DirectoryInfo folder, string subpath) { return new DirectoryInfo(folder.FullName + (subpath != null && subpath.StartsWith("/") ? "" : "/") + subpath); }
