@@ -7,7 +7,6 @@ exports.methodNames = [
     // to be created
     "Run",
     "GetWindow",
-    "GetWindows"
-    /*"ShowWindow",
-    "ActivateWindow"*/
+    "GetWindows",
+    "AddSystemEventListener"
 ];

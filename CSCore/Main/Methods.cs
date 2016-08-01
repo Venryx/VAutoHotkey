@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
+using SystemEventsN;
 using Gma.UserActivityMonitor;
 using static V;
 
@@ -133,10 +134,12 @@ public static class Methods {
 	public static List<Window> GetWindows(dynamic options) {
 		var searchType = (SearchType?)options.searchType ?? SearchType.EnumWindows;
 		var processPath = (string)options.processPath;
-		var process = (string)options.process;
+		var processName = (string)options.processName;
 		var processID = (int?)options.processID ?? -1;
 		var threadID = (int?)options.threadID ?? -1;
-		var className = (string)((Map)options).GetValueOrX("class");
+		var handle = (string)options.handle;
+		//var className = (string)((Map)options).GetValueOrX("class");
+		var className = (string)options.@class;
 		var text = (string)options.text;
 		var text_contains = (string)options.text_contains;
 		//var hiddenWindows = (bool?)options.hiddenWindows ?? false;
@@ -144,9 +147,10 @@ public static class Methods {
 
 		Func<Window, bool> windowFilter = a=>
 			(processPath == null || a.GetProcessPath_() == processPath)
-			&& (process == null || a.GetProcessName_() == process)
+			&& (processName == null || a.GetProcessName_() == processName)
 			&& (processID == -1 || a.GetProcessID_() == processID)
 			&& (threadID == -1 || a.GetThreadID_() == threadID)
+			&& (handle == null || a.handle.ToString() == handle)
 			&& (className == null || a.GetClass_() == className)
 			&& (text == null || a.GetText_() == text)
 			&& (text_contains == null || a.GetText_().Contains(text_contains));
@@ -226,5 +230,23 @@ public static class Methods {
 	static void UpdateTrayIconMenuItems() {
 		var cmdProcess = Process.GetCurrentProcess().GetParentProcess();
 		trayIcon.ContextMenu.MenuItems[0].Text = !new Window(cmdProcess.MainWindowHandle).IsVisible_() ? "Show CMD Window" : "Hide CMD Window";
+	}
+
+	/*public class OnEvent_Class {
+		public Window window;
+		public SystemEvents @event;
+	}*/
+	public static void AddSystemEventListener(string eventTypeName, Func<object, Task<object>> onEvent) {
+		var eventType = ParseEnum<SystemEvents>(eventTypeName);
+		var listenerThread = new Thread(()=> {
+			var listener = new SystemListener(eventType);
+			listener.SystemEvent += (sender, e)=> {
+				var window = new Window(e.windowHandle);
+				//if (@event == null || e.systemEvent == @event)
+				onEvent(new {window = window, @event = e.systemEvent});
+			};
+			Application.Run();
+		});
+		listenerThread.Start();
 	}
 }

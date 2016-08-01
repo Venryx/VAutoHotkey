@@ -16,8 +16,13 @@ function ProcessMethodArgs(args) {
         else if (args[prop] instanceof Function) {
             var innerHandler = args[prop];
             args[prop] = function() {
+                var args = V.AsArray(arguments);
+                //Log("args count:" + args.length + ";" + ToJSON(args) + ";" + (typeof args[0]));
+                for (var i in args)
+                    ProcessResult(args[i]);
+
                 try {
-                    innerHandler.apply(null, arguments);
+                    innerHandler.apply(null, args);
                 } catch(ex) {
                     Log(ex.stack);
                 }
@@ -28,9 +33,9 @@ function ProcessMethodArgs(args) {
 
 function ProcessResult(obj) {
     for (var prop in obj) (function(prop) {
-        /*if (typeof obj[prop] == "object")
+        if (typeof obj[prop] == "object")
             ProcessResult(obj[prop]);
-        else*/ if (obj[prop] instanceof Function) {
+        else if (typeof obj[prop] == "function" || obj[prop] instanceof Function) {
             var innerFunc = obj[prop];
             obj[prop] = function() {
                 var methodArgs = V.AsArray(arguments);

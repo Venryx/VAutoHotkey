@@ -8,16 +8,21 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Gma.UserActivityMonitor;
 using static V;
+using Timer = System.Threading.Timer;
 
 //using Map = System.Collections.Generic.Dictionary<string, object>;
 
 public class Main_NodeJSEntryPoint {
 	// this is the only entry point for calls from NodeJS; so add to queue, and have the processing occur on background thread
 	public async Task<object> CallMethod(dynamic invokeArgs) {
+		if (!Main.launched)
+			Main.Launch();
 		var result = Main.CallMethod(invokeArgs);
 		return result;
 	}
 	public async Task<object> CallMethodAsync(dynamic invokeArgs) {
+		if (!Main.launched)
+			Main.Launch();
 		Main.CallMethodAsync(invokeArgs);
 		return true;
 	}
@@ -30,11 +35,21 @@ public static class Main {
 		//Methods.Init();
 	}
 
-	static bool backgroundThreadStarted;
-	public static void StartBackgroundThreadIfNotStarted() {
-		if (backgroundThreadStarted)
-			return;
-		backgroundThreadStarted = true;
+	public static bool launched;
+	public static void Launch() {
+		launched = true;
+		StartBackgroundThread();
+		/*var timer = new Timer(data=> {
+			while (runOnMainThreadActions.Count > 0) {
+				Log("Running on-main-thread action");
+				runOnMainThreadActions.Dequeue()();
+			}
+		}, null, 0, 10);*/
+	}
+	/*static Queue<Action> runOnMainThreadActions = new Queue<Action>();
+	public static void RunOnMainThread(Action action) { runOnMainThreadActions.Enqueue(action); }*/
+
+	public static void StartBackgroundThread() {
 		Log("Starting background thread");
 
 		// set up pre-quit handler, so we can unregister hooks before quit
@@ -72,6 +87,7 @@ public static class Main {
 				//Log("Returning async result) " + result + " @methodname:" + entry.methodName);
 				entry.callback(result);
 			}
+
 			Thread.Sleep(4); // sleeping too long, e.g. 10ms will result in touch events arriving several seconds delayed due to event overload
 		}
 	}
@@ -123,11 +139,9 @@ public static class Main {
 
 	// this is the only entry point for calls from NodeJS; so add to queue, and have the processing occur on background thread
 	public static object CallMethod(dynamic invokeArgs) {
-		StartBackgroundThreadIfNotStarted();
 		return CallMethod_Internal((string)invokeArgs.methodName, (object[])invokeArgs.args);
 	}
 	public static void CallMethodAsync(dynamic invokeArgs) {
-		StartBackgroundThreadIfNotStarted();
 		// proceed to add call-method entry to the queue (to be executed by the background thread)
 		callMethodQueue.Enqueue(new CallMethodEntry {methodName = (string)invokeArgs.methodName, args = (object[])invokeArgs.args, callback = invokeArgs.callback});
 		// sadly, since we're enqueuing, we can't give a standard return-value; thus the NodeJS standard callback doesn't hold any data

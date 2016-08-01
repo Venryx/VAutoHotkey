@@ -63,9 +63,8 @@ public class Window {
 					}));
 			}
 		}*/
-
 	}
-
+	
 	public IntPtr handle;
 	public Func<object, Task<object>> Show;
 	public bool Show_() {
@@ -137,7 +136,6 @@ public class Window {
 	[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)] static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
 
 	public Func<object, Task<object>> GetProcessPath;
-	// make-so: this works
 	public string GetProcessPath_() {
 		/*var builder = new StringBuilder(1024);
 		//int pathLength = GetModuleFileName((IntPtr)GetProcessID_(), builder, builder.Capacity);
@@ -163,12 +161,14 @@ public class Window {
 		var file = new FileInfo(path);
 		return file.Name;
 	}
+
 	public Func<object, Task<object>> GetProcessID;
 	public uint GetProcessID_() {
 		uint processID = 0;
 		uint threadID = GetWindowThreadProcessId(handle, out processID);
 		return processID;
 	}
+
 	public Func<object, Task<object>> GetThreadID;
 	public uint GetThreadID_() {
 		uint processID = 0;
