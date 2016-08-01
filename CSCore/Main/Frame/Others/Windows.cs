@@ -48,7 +48,9 @@ public class Window {
 		SetPosition = async args=>SetPosition_(Main.ProcessArgs(args)[0]);
 		SetSize = async args=>SetSize_(Main.ProcessArgs(args)[0]);
 		SetPositionAndSize = async args=>SetPositionAndSize_(Main.ProcessArgs(args)[0]);
-		/*var typeInfo = VTypeInfo.Get(typeof(Window));
+
+		// auto-set props for methods
+		var typeInfo = VTypeInfo.Get(typeof(Window));
 		foreach (var method in typeInfo.methods.Values) {
 			if (method.memberInfo.Name.EndsWith("_")) {
 				var prop = typeInfo.props[method.memberInfo.Name.Substring(0, method.memberInfo.Name.Length - 1)];
@@ -62,10 +64,11 @@ public class Window {
 						throw new Exception($"NodeJS-accessible prop does not exist for method '{method.memberInfo.Name}'.");
 					}));
 			}
-		}*/
+		}
 	}
 	
 	public IntPtr handle;
+
 	public Func<object, Task<object>> Show;
 	public bool Show_() {
 		//Log("Showing window:" + handle);
@@ -85,6 +88,52 @@ public class Window {
 	public bool Activate_() {
 		//Log("Activating window:" + handle);
 		SetForegroundWindow(handle);
+		return true;
+	}
+
+	public Func<object, Task<object>> IsVisible;
+	public bool IsVisible_() { return IsWindowVisible(handle); }
+
+	[DllImport("user32", SetLastError = true)]
+	static extern bool IsWindowVisible(IntPtr windowHandle);
+
+	public Func<object, Task<object>> IsNormal;
+	public bool IsNormal_() { return GetWindowState_() == WindowState.Normal; }
+	public Func<object, Task<object>> IsMinimized;
+	public bool IsMinimized_() { return GetWindowState_() == WindowState.Minimized; }
+	public Func<object, Task<object>> IsMaximized;
+	public bool IsMaximized_() { return GetWindowState_() == WindowState.Maximized; }
+
+	public Func<object, Task<object>> GetWindowState;
+	public WindowState GetWindowState_() {
+		var placement = new WindowPlacement();
+		GetWindowPlacement(handle, ref placement);
+		/*if (placement.showCmd == 1)
+			return WindowState.Normal;
+		if (placement.showCmd == 2)
+			return WindowState.Minimized;
+		if (placement.showCmd == 3)
+			return WindowState.Maximized;
+		return WindowState.Unknown;*/
+		return placement.showCmd;
+	}
+	[DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    static extern bool GetWindowPlacement(IntPtr hWnd, ref WindowPlacement lpwndpl);
+
+	public Func<object, Task<object>> Minimize;
+	public bool Minimize_() {
+		ShowWindow(handle, WindowShowStyle.Minimize);
+		return true;
+	}
+	public Func<object, Task<object>> Restore;
+	public bool Restore_() {
+		ShowWindow(handle, WindowShowStyle.Restore);
+		return true;
+	}
+	public Func<object, Task<object>> Maximize;
+	public bool Maximize_() {
+		ShowWindow(handle, WindowShowStyle.Maximize);
 		return true;
 	}
 
@@ -202,11 +251,6 @@ public class Window {
 	static extern bool CloseHandle(IntPtr hObject);
 
 	//[DllImport("kernel32.dll", SetLastError = true)] static extern bool QueryFullProcessImageName([In] IntPtr hProcess, [In] int dwFlags, [Out] StringBuilder lpExeName, ref int lpdwSize);
-
-	public Func<object, Task<object>> IsVisible;
-	public bool IsVisible_() { return IsWindowVisible(handle); }
-
-	[DllImport("user32", SetLastError = true)] static extern bool IsWindowVisible(IntPtr windowHandle);
 
 	public Func<object, Task<object>> SetPosition;
 	public bool SetPosition_(dynamic options) {

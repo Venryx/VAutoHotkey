@@ -1,7 +1,22 @@
 using System;
 
-/// <summary>Enumeration of the different ways of showing a window using 
-/// ShowWindow</summary>
+public struct WindowPlacement {
+	public int length;
+	public int flags;
+	//public int showCmd;
+	public WindowState showCmd;
+	public System.Drawing.Point ptMinPosition;
+	public System.Drawing.Point ptMaxPosition;
+	public System.Drawing.Rectangle rcNormalPosition;
+}
+public enum WindowState {
+	//Unknown = 0,
+	Normal = 1,
+	Minimized = 2,
+	Maximized = 3
+}
+
+/// <summary>Enumeration of the different ways of showing a window using ShowWindow</summary>
 public enum WindowShowStyle : uint {
 	/// <summary>Hides the window and activates another window.</summary>
 	/// <remarks>See SW_HIDE</remarks>
