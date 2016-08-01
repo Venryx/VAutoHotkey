@@ -134,6 +134,8 @@ public static class Main {
 		Log("Shutting down");
 		HookManager.ForceUnsunscribeFromGlobalKeyboardEvents();
 		HookManager.ForceUnsunscribeFromGlobalMouseEvents();
+		if (Methods.trayIcon != null)
+			Methods.trayIcon.Visible = false;
 		quit = true;
 	}
 

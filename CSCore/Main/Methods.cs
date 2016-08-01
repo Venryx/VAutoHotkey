@@ -12,9 +12,11 @@ using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
 using SystemEventsN;
 using Gma.UserActivityMonitor;
+using Microsoft.Win32;
 using static V;
 
 using Map = System.Collections.Generic.Dictionary<string, object>;
+using SystemEvents = SystemEventsN.SystemEvents;
 
 public static class Methods {
 	// set-up
@@ -184,7 +186,7 @@ public static class Methods {
 		cmdWindow.Hide_();
 	}
 
-	static NotifyIcon trayIcon;
+	public static NotifyIcon trayIcon;
 	//public static void CreateTrayIcon(Func<object, Task<object>> reload, Func<object, Task<object>> exit) {
 	public static void CreateTrayIcon(Func<object, Task<object>> exit) {
 		var notifyThread = new Thread(()=>{
@@ -204,10 +206,12 @@ public static class Methods {
 				new MenuItem("Reload script", (sender, e)=> {
 					Process.Start(FileManager.GetFile("Start.lnk").FullName);
 
+					Main.Shutdown(); // shutdown self
+
 					var cmdProcess = Process.GetCurrentProcess().GetParentProcess();
-					cmdProcess.Kill();
+					cmdProcess.Kill(); // kill cmd
 					//reload(null);
-					exit(null);
+					exit(null); // kill node
 				}),
 				new MenuItem("Edit script", (sender, e)=> {
 					Process.Start(FileManager.GetFile("UserScript.js").FullName);
@@ -215,9 +219,12 @@ public static class Methods {
 				new MenuItem("Open script folder", (sender, e)=> { Process.Start("explorer.exe", FileManager.root.FullName); }),
 				new MenuItem("-"),
 				new MenuItem("Exit", (sender, e)=> {
+					Main.Shutdown(); // shutdown self
+
 					var cmdProcess = Process.GetCurrentProcess().GetParentProcess();
 					cmdProcess.Kill(); // kill cmd
 					exit(null); // kill node
+
 					//Application.Exit(); // (we're in node process, so no need to kill self)
 				})
 			});
@@ -248,5 +255,11 @@ public static class Methods {
 			Application.Run();
 		});
 		listenerThread.Start();
+	}
+
+	public static void AddPowerModeChangeListener(Func<object, Task<object>> listener) {
+		Microsoft.Win32.SystemEvents.PowerModeChanged += (sender, e) => {
+			listener(e.Mode);
+		};
 	}
 }
