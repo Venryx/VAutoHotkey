@@ -8,5 +8,6 @@ exports.methodNames = [
     "Run",
     "GetWindow",
     "GetWindows",
-    "AddSystemEventListener"
+    "AddSystemEventListener",
+    "AddPowerModeChangeListener"
 ];
