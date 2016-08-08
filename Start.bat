@@ -24,4 +24,4 @@ if '%errorlevel%' NEQ '0' (
     CD /D "%~dp0"
 :--------------------------------------
 
-node --harmony Start.js & pause & Start.bat
+node --harmony --harmony_default_parameters Start.js %* & pause & Start.bat

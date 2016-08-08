@@ -1,6 +1,8 @@
 var g = global;
 //var window = g;
 
+var process = require("process");
+
 //var robot = require("./build/Release/robotjs.node");
 var edge = require("edge");
 
@@ -103,23 +105,33 @@ for (var methodName of g.API.methodNames) (function(methodName){
     g[methodName] = function(args___) { return g.CallMethod.apply(null, [methodName].concat(V.AsArray(arguments))); }
     g[methodName + "Async"] = function(args___) { return g.CallMethodAsync.apply(null, [methodName].concat(V.AsArray(arguments))); }
 })(methodName);
+
 // special ones
+g.launchingAtStartup = process.argv.some(a=>a == "-atStartup");
 g.CreateTrayIcon = function() {
     /*var reloadFunc = function() {
         process.exit(); // just exit; C# side will have already launched a new instance of the Start.bat batch file
     };*/
     var exitFunc = function() { process.exit(); };
     return g.CallMethod.apply(null, ["CreateTrayIcon", exitFunc].concat(V.AsArray(arguments)));
-}
+};
 
 fs = require("fs");
 // if UserScript does not exist, create it from default-file
 try { fs.statSync("./UserScript.js", "utf8").isFile(); }
 catch(ex) { // if file doesn't exist
-    fs.createReadStream("./Others/UserScript_Default.js").pipe(fs.createWriteStream("UserScript.js"));
+    fs.createReadStream("./ScriptExamples/Default.js").pipe(fs.createWriteStream("UserScript.js"));
 }
 
+// user script
+// ==========
+var g = global;
+for (var propName of g.API.methodNames) {
+    eval("var " + propName + " = g." + propName + ";");
+    eval("var " + propName + "Async = g." + propName + "Async;");
+}
 require("./UserScript.js");
+// ==========
 
 //var exit = false;
 function WaitMoreIfNotReady() {

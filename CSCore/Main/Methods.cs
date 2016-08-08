@@ -204,7 +204,7 @@ public static class Methods {
 				}),
 				new MenuItem("-"), 
 				new MenuItem("Reload script", (sender, e)=> {
-					Process.Start(FileManager.GetFile("Start.lnk").FullName);
+					Process.Start(FileManager.GetFile("Start.bat").FullName);
 
 					Main.Shutdown(); // shutdown self
 

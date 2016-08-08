@@ -24,4 +24,4 @@ if '%errorlevel%' NEQ '0' (
     CD /D "%~dp0"
 :--------------------------------------
 
-schtasks /create /sc onlogon /tn VAutoHotkey /rl highest /tr %0\..\Start.bat
+schtasks /create /sc onlogon /tn VAutoHotkey /rl highest /tr "%0\..\Start.bat -atStartup"
