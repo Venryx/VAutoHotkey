@@ -23,12 +23,13 @@ AddGlobalHotkey('Control+Shift+N', {capture: true, onDown: function(data) {
 
 1) Download and install NodeJS: http://nodejs.org  
 2) Download this project's folder contents. (simple way: click "Clone or download" near the page's top-right, "Download ZIP", then extract/copy-out its inner folder somewhere)  
-3) Open the "VAutoHotkey" root folder, and double-click the "Install.bat" batch file.  
+3) Open the "VAutoHotkey" root folder, and run the "Install.bat" file.  
+4) [optional] If you want to have your script run at startup/user-logon, run the "EnableRunAtStartup.bat" file.
 
 # Usage
 
 1) Open the UserScript.js file, and add your own hotkeys/commands. (see below for options)  
-2) Open the "VAutoHotkey" root folder, and double-click the "Start.bat" or "StartAsAdmin.bat" file. (some commands require admin rights)  
+2) Open the "VAutoHotkey" root folder, and run the "Start.bat" or "StartAsAdmin.bat" file. (some commands require admin rights)  
 
 # Scripting
 
