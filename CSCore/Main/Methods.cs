@@ -125,6 +125,7 @@ public static class Methods {
 			filename = command.Substring(0, command.IndexOf_X(1, "\"") + 1);
 		else if (command.Contains(" ")) // else, if contains space, arguments must be supplied as well, so extract just filename
 			filename = command.Substring(0, command.IndexOf(" "));
+		filename = filename.Replace("/", "\\");
 		var file = new FileInfo(filename);
 
 		// finalize arguments
