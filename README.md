@@ -28,7 +28,7 @@ AddGlobalHotkey('Control+Shift+N', {capture: true, onDown: function(data) {
 # Usage
 
 1) Open the UserScript.js file, and add your own hotkeys/commands. (see below for options)  
-2) Open the "VAutoHotkey" root folder, and double-click the "Start.bat" file. (it's set to launch as admin, which is needed for some functions)  
+2) Open the "VAutoHotkey" root folder, and double-click the "Start.bat" or "StartAsAdmin.bat" file. (some commands require admin rights)  
 
 # Scripting
 
