@@ -22,7 +22,7 @@ AddGlobalHotkey('Control+Shift+N', {capture: true, onDown: function(data) {
 # Installation
 
 1) Download and install NodeJS: http://nodejs.org  
-2) Download the project's folder contents. (simple way: click "Clone or download" near the page's top-right, "Download ZIP", then extract/copy-out its inner folder somewhere)  
+2) Download this project's folder contents. (simple way: click "Clone or download" near the page's top-right, "Download ZIP", then extract/copy-out its inner folder somewhere)  
 3) Open the "VAutoHotkey" root folder, and double-click the "Install.bat" batch file.  
 
 # Usage
