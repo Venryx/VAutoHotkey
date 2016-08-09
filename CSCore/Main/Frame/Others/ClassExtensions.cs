@@ -11,7 +11,6 @@ using static System.String;
 
 public static class ClassExtensions {
 	// string
-	// string
 	public static string TrimStart(this string s, int length) { return s.Substring(length); }
 	public static string TrimEnd(this string s, int length) { return s.Substring(0, s.Length - length); }
 	public static string SubstringSE(this string self, int startIndex, int enderIndex) { return self.Substring(startIndex, enderIndex - startIndex); }
@@ -46,6 +45,13 @@ public static class ClassExtensions {
 
 	// IEnumerable<T>
 	public static string JoinUsing(this IEnumerable list, string separator) { return Join(separator, list.Cast<string>().ToArray()); }
+	public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source) { return new HashSet<T>(source); }
+	public static IEnumerable<TSource> Except<TSource>(this IEnumerable<TSource> s, params TSource[] items) { return Enumerable.Except(s, items); }
+	/*public static T? FirstOrNull<T>(this IEnumerable<T> s, Func<T, bool> itemMatchFunc = null) where T : struct {
+		if (itemMatchFunc != null)
+			return s.Any(itemMatchFunc) ? (T?)s.First(itemMatchFunc) : null;
+		return s.Any() ? (T?)s.First() : null;
+	}*/
 
 	// List<T>
 	//public static T GetValueOrX<T>(this List<T> s, int index, T defaultValue = default(T)) { return index >= 0 && index < s.Count ? s[index] : defaultValue; }

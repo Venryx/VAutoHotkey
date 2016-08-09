@@ -2,11 +2,8 @@ using System;
 using System.Windows.Forms;
 
 namespace Gma.UserActivityMonitor {
-	/// <summary>This class monitors all mouse activities globally (also outside of the application) and provides appropriate
-	///     events.</summary>
+	/// <summary>Monitors all mouse activities globally (also outside of the application) and provides appropriate events.</summary>
 	public static partial class HookManager {
-		//################################################################
-
 		//#region Mouse events
 		static event MouseEventHandler s_MouseMove;
 
@@ -185,11 +182,24 @@ namespace Gma.UserActivityMonitor {
 				s_PrevClickedButton = e.Button;
 			}
 		}
-		//#endregion
 
-		//################################################################
+		// keyboard
+		// ==========
 
-		//#region Keyboard events
+		static event KeyEventHandler s_KeyDown;
+
+		/// <summary>Occurs when a key is pressed down or held.</summary>
+		public static event KeyEventHandler KeyDownOrHeld {
+			add {
+				EnsureSubscribedToGlobalKeyboardEvents();
+				s_KeyDown += value;
+			}
+			remove {
+				s_KeyDown -= value;
+				TryUnsubscribeFromGlobalKeyboardEvents();
+			}
+		}
+
 		static event KeyPressEventHandler s_KeyPress;
 
 		/// <summary>Occurs when a key is pressed.</summary>
@@ -228,20 +238,5 @@ namespace Gma.UserActivityMonitor {
 				TryUnsubscribeFromGlobalKeyboardEvents();
 			}
 		}
-
-		static event KeyEventHandler s_KeyDown;
-
-		/// <summary>Occurs when a key is preseed.</summary>
-		public static event KeyEventHandler KeyDown {
-			add {
-				EnsureSubscribedToGlobalKeyboardEvents();
-				s_KeyDown += value;
-			}
-			remove {
-				s_KeyDown -= value;
-				TryUnsubscribeFromGlobalKeyboardEvents();
-			}
-		}
-		//#endregion
 	}
 }

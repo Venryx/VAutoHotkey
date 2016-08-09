@@ -43,28 +43,44 @@ public static class Methods {
 		//HookManager.EnsureSubscribedToGlobalKeyboardEvents();
 		//HookManager.EnsureSubscribedToGlobalMouseEvents();
 
-		HookManager.KeyDown += (sender, e)=> {
+		HookManager.KeyDownOrHeld += (sender, e)=> {
 			var key = keySimplifications.GetValueOrX(e.KeyData, e.KeyData);
+			// if key is already known as down, ignore (we only care about when it's first pressed down)
+			if (keyDowns.GetValueOrX(key)) return;
 			//Log("KeyDown) " + key + (key != e.KeyData ? "   [Raw: " + e.KeyData + "]" : ""));
 			keyDowns[key] = true;
 
 			foreach (var hotkey in globalHotkeys)
-				// if we just pressed down a key in a hotkey, and that hotkey is now fulfilled, trigger its onDown callback
+				// if we just downed a key in a hotkey, and that hotkey is now fulfilled, trigger its onDown callback
 				if (hotkey.onDown != null && hotkey.keys.Any(a=>a == key) && hotkey.keys.All(a=>keyDowns.GetValueOrX(a))) {
+					// if supposed to be exact modifier match, but it isn't, then don't trigger hotkey's event
+					if (hotkey.exactModifiersMatch && !(
+						keyDowns.GetValueOrX(Keys.ControlKey) == hotkey.keys.Contains(Keys.ControlKey)
+						&& keyDowns.GetValueOrX(Keys.ShiftKey) == hotkey.keys.Contains(Keys.ShiftKey)
+						&& keyDowns.GetValueOrX(Keys.Menu) == hotkey.keys.Contains(Keys.Menu)
+					)) continue;
+
 					hotkey.onDown.Invoke(null);
 					if (hotkey.capture)
 						e.Handled = true;
 				}
 		};
-		// make-so: these get called for ctrl+shift+esc hotkey keys
 		HookManager.KeyUp += (sender, e)=> {
 			var key = keySimplifications.GetValueOrX(e.KeyData, e.KeyData);
 			//Log("KeyUp) " + key + (key != e.KeyData ? "   [Raw: " + e.KeyData + "]" : ""));
 			keyDowns[key] = false;
 
+			Func<Keys, bool> keyDownOrJustUpped = key2=>keyDowns.GetValueOrX(key) || key2 == key;
 			foreach (var hotkey in globalHotkeys)
-				// if we just pressed up a key in a hotkey, and that hotkey was just fulfilled, trigger its onUp callback
-				if (hotkey.onUp != null && hotkey.keys.Any(a=>a == key) && hotkey.keys.All(a=>keyDowns.GetValueOrX(a))) {
+				// if we just upped a key in a hotkey, and all that other hotkey's keys are still down, trigger its onUp callback
+				if (hotkey.onUp != null && hotkey.keys.Any(a=>a == key) && hotkey.keys.All(a=>keyDownOrJustUpped(a))) {
+					// if supposed to be exact modifier match, but it isn't, then don't trigger hotkey's event
+					if (hotkey.exactModifiersMatch && !(
+						keyDownOrJustUpped(Keys.ControlKey) == hotkey.keys.Contains(Keys.ControlKey)
+						&& keyDownOrJustUpped(Keys.ShiftKey) == hotkey.keys.Contains(Keys.ShiftKey)
+						&& keyDownOrJustUpped(Keys.Menu) == hotkey.keys.Contains(Keys.Menu)
+					)) continue;
+
 					hotkey.onUp.Invoke(null);
 					if (hotkey.capture)
 						e.Handled = true;
@@ -78,9 +94,10 @@ public static class Methods {
 	public static List<GlobalHotkey> globalHotkeys = new List<GlobalHotkey>();
 	public class GlobalHotkey {
 		public List<Keys> keys;
+		public bool capture;
+		public bool exactModifiersMatch;
 		public Func<object, Task<object>> onDown;
 		public Func<object, Task<object>> onUp;
-		public bool capture;
 		public override string ToString() { return keys.Select(a=>a.ToString()).JoinUsing(" "); }
 	}
 
@@ -91,6 +108,7 @@ public static class Methods {
 	}*/
 	public static void AddGlobalHotkey(string keysStr, dynamic options) {
 		var capture = options.capture ?? true;
+		var exactModifiersMatch = options.exactModifierMatch ?? true;
 		var onDown = (Func<object, Task<object>>)options.onDown;
 		var onUp = (Func<object, Task<object>>)options.onUp;
 
@@ -98,7 +116,7 @@ public static class Methods {
 		foreach (var key in keys)
 			if (!keyDowns.ContainsKey(key))
 				keyDowns[key] = false;
-		var hotkey = new GlobalHotkey {keys = keys, capture = capture, onDown = onDown, onUp = onUp};
+		var hotkey = new GlobalHotkey {keys = keys, capture = capture, exactModifiersMatch = exactModifiersMatch, onDown = onDown, onUp = onUp};
 		//Log("Adding hotkey. Keys: " + hotkey + " Callback: " + callback);
 		globalHotkeys.Add(hotkey);
 	}
