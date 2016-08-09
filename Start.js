@@ -125,11 +125,11 @@ catch(ex) { // if file doesn't exist
 
 // user script
 // ==========
-var g = global;
+/*var g = global;
 for (var propName of g.API.methodNames) {
     eval("var " + propName + " = g." + propName + ";");
     eval("var " + propName + "Async = g." + propName + "Async;");
-}
+}*/
 require("./UserScript.js");
 // ==========
 

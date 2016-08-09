@@ -127,30 +127,32 @@ public static class Methods {
 		options = options ?? new Map_Dynamic();
 		var useCMD = options.useCMD ?? false;
 		var newCMD = options.newCMD ?? false;
-		//var showType = (ProcessWindowStyle?)options.showType ?? ProcessWindowStyle.Normal; // (resolved later)
+		//var showType = V.TryParseEnum<ProcessWindowStyle>(options.showType) ?? ProcessWindowStyle.Normal; // (resolved later)
 		var startFolder = (string)options.startFolder ?? "@file-folder";
 		var autoEscapeFilename = options.autoEscapeFilename ?? true;
-		var arguments = (string)options.arguments;
-		
-		if (autoEscapeFilename && command.Contains(".") && command.Contains(" ")) {
-			var filenameStopPos = command.IndexOf(" ", command.IndexOf("."));
-			command = '"' + command.Substring(0, filenameStopPos) + '"' + command.Substring(filenameStopPos);
-		}
+		var args_fromOptions = (string)options.arguments;
 
-		// finalize file
-		string filename = command;
-		if (command.StartsWith("\"")) // if starts with quote, it must be quoted filename, so extract it
-			filename = command.Substring(0, command.IndexOf_X(1, "\"") + 1);
-		else if (command.Contains(" ")) // else, if contains space, arguments must be supplied as well, so extract just filename
-			filename = command.Substring(0, command.IndexOf(" "));
+		// resolve file-str and args-str
+		string filename;
+		string args_fromCommand;
+		// if file-str is unambiguously provided using quotes
+		if (command.StartsWith("\"")) {
+			filename = command.SubstringSE(1, command.IndexOf_X(1, "\""));
+			args_fromCommand = command.Substring(command.IndexOf_X(1, "\"") + 2);
+		}
+		else {
+			var filenameStopPos = autoEscapeFilename && command.Contains(".") && command.Contains(" ")
+				? command.Substring(command.IndexOf(".")).Contains(" ") ? command.IndexOf(" ", command.IndexOf(".")) : command.Length
+				: command.Contains(" ") ? command.IndexOf(" ") : command.Length;
+			filename = command.Substring(0, filenameStopPos);
+			args_fromCommand = filenameStopPos < command.Length ? command.Substring(filenameStopPos + 1) : "";
+		}
 		filename = filename.Replace("/", "\\");
+		var args = (args_fromCommand.Length > 0 ? args_fromCommand + " " : "") + args_fromOptions;
 		var file = new FileInfo(filename);
 
-		// finalize arguments
-		if (filename.Length < command.Length) // if has arguments specified in command-str, prepend that to argument-str
-			arguments = command.Substring(filename.Length + 1) + " " + arguments;
-
-		var showType = (ProcessWindowStyle?)options.showType ?? (file.Extension == ".bat" ? ProcessWindowStyle.Hidden : ProcessWindowStyle.Normal);
+		var showType = V.TryParseEnum<ProcessWindowStyle>(options.showType)
+			?? (file.Extension == ".bat" || file.Extension == ".cmd" ? ProcessWindowStyle.Hidden : ProcessWindowStyle.Normal);
 
 		var startInfo = new ProcessStartInfo();
 		startInfo.WindowStyle = showType;
@@ -159,11 +161,11 @@ public static class Methods {
 			startInfo.WorkingDirectory = startFolder == "@file-folder" ? file.DirectoryName : startFolder;
 		if (useCMD) {
 			startInfo.FileName = "cmd.exe";
-			startInfo.Arguments = "/c " + command;
+			startInfo.Arguments = "/c " + filename + (args.Length > 0 ? " " + args : "");
 		}
 		else {
 			startInfo.FileName = filename;
-			startInfo.Arguments = arguments;
+			startInfo.Arguments = args;
 		}
 
 		var process = new Process();
@@ -181,7 +183,7 @@ public static class Methods {
 		return windows.FirstOrDefault();
 	}
 	public static List<Window> GetWindows(dynamic options) {
-		var searchType = (SearchType?)options.searchType ?? SearchType.EnumWindows;
+		var searchType = V.TryParseEnum<SearchType>(options.searchType) ?? SearchType.EnumWindows;
 		var processPath = (string)options.processPath;
 		var processName = (string)options.processName;
 		var processID = (int?)options.processID ?? -1;

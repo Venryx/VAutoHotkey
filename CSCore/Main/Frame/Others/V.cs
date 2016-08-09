@@ -98,6 +98,16 @@ public static class V {
 	public static T ParseEnum<T>(string enumName, bool firstLetterCaseMatters = true) {
 		if (!firstLetterCaseMatters)
 			enumName = enumName.Substring(0, 1).ToUpper() + enumName.Substring(1);
-		return (T)System.Enum.Parse(typeof(T), enumName);
+		return (T)Enum.Parse(typeof(T), enumName);
+	}
+	public static T? TryParseEnum<T>(string enumName, bool firstLetterCaseMatters = true) where T : struct {
+		try {
+			if (!firstLetterCaseMatters)
+				enumName = enumName.Substring(0, 1).ToUpper() + enumName.Substring(1);
+			return (T?)Enum.Parse(typeof(T), enumName);
+		}
+		catch {
+			return null;
+		}
 	}
 }
