@@ -107,21 +107,49 @@ public static class Methods {
 
 	public static void Run(string command, dynamic options = null) {
 		options = options ?? new Map_Dynamic();
-		var useCMD = options.useCMD ?? true;
-		var cmdHidden = options.cmdHidden ?? true;
-
-		if (useCMD) {
-			var startInfo = new ProcessStartInfo();
-			if (cmdHidden)
-				startInfo.WindowStyle = ProcessWindowStyle.Hidden;
-			startInfo.FileName = "cmd.exe";
-			startInfo.Arguments = "/C " + command;
-			var process = new Process();
-			process.StartInfo = startInfo;
-			process.Start();
+		var useCMD = options.useCMD ?? false;
+		var newCMD = options.newCMD ?? false;
+		//var showType = (ProcessWindowStyle?)options.showType ?? ProcessWindowStyle.Normal; // (resolved later)
+		var startFolder = (string)options.startFolder ?? "@file-folder";
+		var autoEscapeFilename = options.autoEscapeFilename ?? true;
+		var arguments = (string)options.arguments;
+		
+		if (autoEscapeFilename && command.Contains(".") && command.Contains(" ")) {
+			var filenameStopPos = command.IndexOf(" ", command.IndexOf("."));
+			command = '"' + command.Substring(0, filenameStopPos) + '"' + command.Substring(filenameStopPos);
 		}
-		else
-			Process.Start(command);
+
+		// finalize file
+		string filename = command;
+		if (command.StartsWith("\"")) // if starts with quote, it must be quoted filename, so extract it
+			filename = command.Substring(0, command.IndexOf_X(1, "\"") + 1);
+		else if (command.Contains(" ")) // else, if contains space, arguments must be supplied as well, so extract just filename
+			filename = command.Substring(0, command.IndexOf(" "));
+		var file = new FileInfo(filename);
+
+		// finalize arguments
+		if (filename.Length < command.Length) // if has arguments specified in command-str, prepend that to argument-str
+			arguments = command.Substring(filename.Length + 1) + " " + arguments;
+
+		var showType = (ProcessWindowStyle?)options.showType ?? (file.Extension == ".bat" ? ProcessWindowStyle.Hidden : ProcessWindowStyle.Normal);
+
+		var startInfo = new ProcessStartInfo();
+		startInfo.WindowStyle = showType;
+		startInfo.CreateNoWindow = !newCMD;
+		if (startFolder != null)
+			startInfo.WorkingDirectory = startFolder == "@file-folder" ? file.DirectoryName : startFolder;
+		if (useCMD) {
+			startInfo.FileName = "cmd.exe";
+			startInfo.Arguments = "/c " + command;
+		}
+		else {
+			startInfo.FileName = filename;
+			startInfo.Arguments = arguments;
+		}
+
+		var process = new Process();
+		process.StartInfo = startInfo;
+		process.Start();
 	}
 	
 	public enum SearchType {

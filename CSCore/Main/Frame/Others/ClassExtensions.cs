@@ -6,9 +6,37 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Text.RegularExpressions;
 using static System.String;
 
 public static class ClassExtensions {
+	// string
+	// string
+	public static string TrimStart(this string s, int length) { return s.Substring(length); }
+	public static string TrimEnd(this string s, int length) { return s.Substring(0, s.Length - length); }
+	public static string SubstringSE(this string self, int startIndex, int enderIndex) { return self.Substring(startIndex, enderIndex - startIndex); }
+	public static int IndexOf_X(this string s, int x, string str) { // (0-based)
+		var currentPos = -1;
+		for (var i = 0; i <= x; i++) {
+			var subIndex = s.IndexOf(str, currentPos + 1);
+			if (subIndex == -1)
+				return -1; // no such xth index
+			currentPos = subIndex;
+		}
+		return currentPos;
+	}
+	public static int IndexOf_XFromLast(this string s, int x, string str) { // (0-based)
+		var currentPos = (s.Length - str.Length) + 1; // index just after the last-index-where-match-could-occur
+		for (var i = 0; i <= x; i++) {
+			var subIndex = s.LastIndexOf(str, currentPos - 1);
+			if (subIndex == -1)
+				return -1; // no such xth index
+			currentPos = subIndex;
+		}
+		return currentPos;
+	}
+	public static string Replace_Regex(this string s, string regexMatch, string replaceWith) { return new Regex(regexMatch).Replace(s, replaceWith); }
+
 	//public static T GetValueOrX<T>(this ExpandoObject s, string propName, T defaultValueX = default(T)) {
 	// for ExpandoObjects/dynamic
 	/*public static T Get<T>(this object s, string propName, T defaultValueX = default(T)) {
