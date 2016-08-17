@@ -249,8 +249,6 @@ public static class Methods {
 		var text_contains = (string)options.text_contains;
 		//var hiddenWindows = (bool?)options.hiddenWindows ?? false;
 
-		window.GetProcess_();
-
 		return /*(processPath == null || process.GetPath_() == processPath)
 			&& (processName == null || process.GetName_() == processName)
 			&& (processID == -1 || process.GetID_() == processID)*/
