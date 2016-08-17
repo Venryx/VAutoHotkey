@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
@@ -44,7 +45,8 @@ public static class Main {
 				Log("Running on-main-thread action");
 				runOnMainThreadActions.Dequeue()();
 			}
-		}, null, 0, 10);*/
+		}, null, 0, 10);
+		Application.Run();*/
 	}
 	/*static Queue<Action> runOnMainThreadActions = new Queue<Action>();
 	public static void RunOnMainThread(Action action) { runOnMainThreadActions.Enqueue(action); }*/
@@ -78,7 +80,9 @@ public static class Main {
 
 		// just keep looping here, processing input events and CallMethod calls, till NodeJS tells us to stop
 		while (!quit) {
+			//Log("Checking 2");
 			Application.DoEvents(); // process input-events
+
 			//while (callMethodQueue.Count > 0) {
 			if (callMethodQueue.Count > 0) {
 				var entry = callMethodQueue.Dequeue();
@@ -88,9 +92,16 @@ public static class Main {
 				entry.callback(result);
 			}
 
+			/*while (runOnBackgroundThreadActions.Count > 0) {
+				Log("Running on-background-thread action");
+				runOnBackgroundThreadActions.Dequeue()();
+			}*/
+
 			Thread.Sleep(4); // sleeping too long, e.g. 10ms will result in touch events arriving several seconds delayed due to event overload
 		}
 	}
+	/*static Queue<Action> runOnBackgroundThreadActions = new Queue<Action>();
+	public static void RunOnBackgroundThread(Action action) { runOnBackgroundThreadActions.Enqueue(action); }*/
 
 	public static object[] ProcessArgs(object args) { return ProcessArgs(args as object[]); }
 	public static object[] ProcessArgs(object[] args) {
@@ -100,15 +111,24 @@ public static class Main {
 		return newArgs.ToArray();
 	}
 	public static object ProcessArg(object arg) {
-		if (arg is ExpandoObject)
+		if (arg is ExpandoObject) {
 			//return (IDictionary<string, object>)arg;
-			return new Map_Dynamic((ExpandoObject)arg);
+			var result = new Map_Dynamic((ExpandoObject)arg);
+			foreach (var key in ((Dictionary<string, object>)result).Keys)
+				result.SetProperty(key, ProcessArg(result.GetProperty(key)));
+			return result;
+		}
+		if (arg is object[])
+			return ((object[])arg).Select(ProcessArg).ToArray();
+		/*if (arg is List<object>)
+			return ((List<object>)arg).Select(ProcessArg).ToList();*/
 		return arg;
 	}
 	static object CallMethod_Internal(string methodName, object[] args) {
 		Log("Calling method) " + methodName + " Args: " + args.Select(a=>a.GetType().Name).JoinUsing(","));
 		try {
 			args = ProcessArgs(args);
+			//Log("Calling method_2) " + methodName + " Args: " + args.Select(a => a.GetType().Name).JoinUsing(","));
 
 			/*if (args.Length > methods[methodName].GetParameters().Length)
 				args = args.Take(methods[methodName].GetParameters().Length).ToArray();*/
@@ -116,9 +136,7 @@ public static class Main {
 			if (additionalArgsNeeded > 0)
 				args = args.Concat(Enumerable.Range(0, additionalArgsNeeded).Select(a=>Type.Missing)).ToArray();
 
-			var result = methods[methodName].Invoke(null, args);
-			if (result == null)
-				result = "@@@NULL@@@";
+			var result = methods[methodName].Invoke(null, args) ?? "@@@NULL@@@";
 			Log("Returning result) " + result);
 			return result;
 		}
@@ -134,8 +152,8 @@ public static class Main {
 		Log("Shutting down");
 		HookManager.ForceUnsunscribeFromGlobalKeyboardEvents();
 		HookManager.ForceUnsunscribeFromGlobalMouseEvents();
-		if (Methods.trayIcon != null)
-			Methods.trayIcon.Visible = false;
+		foreach (var trayIcon in Methods.trayIcons)
+			trayIcon.Visible = false;
 		quit = true;
 	}
 

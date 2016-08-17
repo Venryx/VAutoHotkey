@@ -121,9 +121,42 @@ public static class Methods {
 		globalHotkeys.Add(hotkey);
 	}
 
-	public static bool IsProcessOpen(string processName) { return Process.GetProcessesByName(processName).Any(); }
+	//public static bool IsProcessOpen(string processName) { return Process.GetProcessesByName(processName).Any(); }
+	public static VProcess GetProcess(dynamic options) {
+		if (options is string)
+			options = new Map_Dynamic(new Map {{"name", options}});
 
-	public static void Run(string command, dynamic options = null) {
+		var processes = (IEnumerable<VProcess>)GetProcesses(options);
+		return processes.FirstOrDefault();
+	}
+	public static List<VProcess> GetProcesses(dynamic options) {
+		//var searchType = V.TryParseEnum<SearchType>(options.searchType) ?? SearchType.EnumWindows;
+		var skip = (int?)options.skip ?? 0;
+
+		IEnumerable<VProcess> result = Process.GetProcesses().Select(a=>new VProcess(a));
+		//result = result.Where(a=>DoesProcessMatch(a, options)).Skip(skip);
+		result = result.Where(a => DoesProcessMatch(a, options)).Skip(skip);
+		return result.ToList();
+	}
+	static bool DoesProcessMatch(VProcess process, dynamic options) {
+		var path = (string)options.path;
+		var name = (string)options.name;
+		var id = (int?)options.id ?? -1;
+		var threadIDs_contains = (int?)options.threadIDs_contains ?? -1;
+		//var handle = (string)options.handle;
+		var argsStr = (string)options.argsStr;
+		var argsStr_contains = (string)options.argsStr_contains;
+
+		return (path == null || process.GetPath_() == path)
+			&& (name == null || process.GetName_() == name)
+			&& (id == -1 || process.id == id)
+			&& (threadIDs_contains == -1 || process.GetThreadIDs_().Any(b=>b == threadIDs_contains))
+			//&& (handle == null || process.GetHandle_().ToString() == handle)
+			&& (argsStr == null || process.GetArgsStr_() == argsStr)
+			&& (argsStr_contains == null || process.GetArgsStr_().Contains(argsStr_contains));
+	}
+
+	public static VProcess Run(string command, dynamic options = null) {
 		options = options ?? new Map_Dynamic();
 		var useCMD = options.useCMD ?? false;
 		var newCMD = options.newCMD ?? false;
@@ -171,6 +204,7 @@ public static class Methods {
 		var process = new Process();
 		process.StartInfo = startInfo;
 		process.Start();
+		return new VProcess(process);
 	}
 	
 	public enum SearchType {
@@ -184,27 +218,11 @@ public static class Methods {
 	}
 	public static List<Window> GetWindows(dynamic options) {
 		var searchType = V.TryParseEnum<SearchType>(options.searchType) ?? SearchType.EnumWindows;
-		var processPath = (string)options.processPath;
-		var processName = (string)options.processName;
-		var processID = (int?)options.processID ?? -1;
-		var threadID = (int?)options.threadID ?? -1;
-		var handle = (string)options.handle;
-		//var className = (string)((Map)options).GetValueOrX("class");
-		var className = (string)options.@class;
-		var text = (string)options.text;
-		var text_contains = (string)options.text_contains;
-		//var hiddenWindows = (bool?)options.hiddenWindows ?? false;
 		var skip = (int?)options.skip ?? 0;
 
-		Func<Window, bool> windowFilter = a=>
-			(processPath == null || a.GetProcessPath_() == processPath)
-			&& (processName == null || a.GetProcessName_() == processName)
-			&& (processID == -1 || a.GetProcessID_() == processID)
-			&& (threadID == -1 || a.GetThreadID_() == threadID)
-			&& (handle == null || a.handle.ToString() == handle)
-			&& (className == null || a.GetClass_() == className)
-			&& (text == null || a.GetText_() == text)
-			&& (text_contains == null || a.GetText_().Contains(text_contains));
+		// window match options (early)
+		var className = (string)options.@class;
+		var text = (string)options.text;
 
 		IEnumerable<Window> result = new List<Window>();
 		if (searchType == SearchType.EnumWindows)
@@ -213,8 +231,35 @@ public static class Methods {
 			result = new List<Window> {new Window(FindWindow(className, text))};
 		if (searchType == SearchType.ProcessMainWindows)
 			result = Process.GetProcesses().Select(a=>new Window(a.MainWindowHandle));
-		result = result.Where(windowFilter).Skip(skip);
+		result = result.Where(a=>DoesWindowMatch(a, options)).Skip(skip);
 		return result.ToList();
+	}
+	static bool DoesWindowMatch(Window window, dynamic options) {
+		/*var processPath = (string)options.processPath;
+		var processName = (string)options.processName;
+		var processID = (int?)options.processID ?? -1;*/
+		var processMatchOptions = options.process;
+		if (processMatchOptions is string)
+			processMatchOptions = new Map_Dynamic(new Map {{"name", processMatchOptions}});
+		var threadID = (int?)options.threadID ?? -1;
+		var handle = (string)options.handle;
+		//var className = (string)((Map)options).GetValueOrX("class");
+		var className = (string)options.@class;
+		var text = (string)options.text;
+		var text_contains = (string)options.text_contains;
+		//var hiddenWindows = (bool?)options.hiddenWindows ?? false;
+
+		window.GetProcess_();
+
+		return /*(processPath == null || process.GetPath_() == processPath)
+			&& (processName == null || process.GetName_() == processName)
+			&& (processID == -1 || process.GetID_() == processID)*/
+			(processMatchOptions == null || DoesProcessMatch(window.GetProcess_(), processMatchOptions))
+			&& (threadID == -1 || window.GetThreadID_() == threadID)
+			&& (handle == null || window.handle.ToString() == handle)
+			&& (className == null || window.GetClass_() == className)
+			&& (text == null || window.GetText_() == text)
+			&& (text_contains == null || window.GetText_().Contains(text_contains));
 	}
 
 	[DllImport("user32.dll")] static extern IntPtr FindWindow(string className, string text);
@@ -222,22 +267,23 @@ public static class Methods {
 	//static Window cmdWindow;
 	public static void ShowCMDWindow() {
 		var cmdProcess = Process.GetCurrentProcess().GetParentProcess();
-		/*if (cmdWindow == null)
-			cmdWindow = new Window(cmdProcess.MainWindowHandle);*/
-		var cmdWindow = GetWindow(new Map_Dynamic(new Map {{"processID", cmdProcess.Id}}));
+		/*dynamic options = new Map_Dynamic();
+		options.process = new Map_Dynamic(new Map {{"id", cmdProcess.Id}});
+		var cmdWindow = GetWindow(options);*/
+		var cmdWindow = GetWindow(new Map_Dynamic(new Map {{"process", new Map_Dynamic(new Map {{"id", cmdProcess.Id}})}}));
 		cmdWindow.Show_();
 	}
 	public static void HideCMDWindow() {
 		var cmdProcess = Process.GetCurrentProcess().GetParentProcess();
-		/*if (cmdWindow == null)
-			cmdWindow = new Window(cmdProcess.MainWindowHandle);*/
-		var cmdWindow = GetWindow(new Map_Dynamic(new Map {{"processID", cmdProcess.Id}}));
+		var cmdWindow = GetWindow(new Map_Dynamic(new Map {{"process", new Map_Dynamic(new Map {{"id", cmdProcess.Id}})}}));
 		cmdWindow.Hide_();
 	}
 
-	public static NotifyIcon trayIcon;
-	//public static void CreateTrayIcon(Func<object, Task<object>> reload, Func<object, Task<object>> exit) {
-	public static void CreateTrayIcon(Func<object, Task<object>> exit) {
+	public static List<NotifyIcon> trayIcons = new List<NotifyIcon>();
+
+	public static NotifyIcon standardTrayIcon;
+	//public static void CreateStandardTrayIcon(Func<object, Task<object>> reload, Func<object, Task<object>> exit) {
+	public static void CreateStandardTrayIcon(Func<object, Task<object>> exit) {
 		var notifyThread = new Thread(()=>{
 			var icon = new NotifyIcon();
 			icon.Icon = Icon.ExtractAssociatedIcon(FileManager.csCore.GetFile("Icon_x16.ico").FullName);
@@ -277,7 +323,8 @@ public static class Methods {
 					//Application.Exit(); // (we're in node process, so no need to kill self)
 				})
 			});
-			trayIcon = icon;
+			standardTrayIcon = icon;
+			trayIcons.Add(icon);
 			UpdateTrayIconMenuItems();
 			Application.Run();
 		});
@@ -285,7 +332,74 @@ public static class Methods {
 	}
 	static void UpdateTrayIconMenuItems() {
 		var cmdProcess = Process.GetCurrentProcess().GetParentProcess();
-		trayIcon.ContextMenu.MenuItems[0].Text = !new Window(cmdProcess.MainWindowHandle).IsVisible_() ? "Show CMD Window" : "Hide CMD Window";
+		standardTrayIcon.ContextMenu.MenuItems[0].Text = !new Window(cmdProcess.MainWindowHandle).IsVisible_() ? "Show CMD Window" : "Hide CMD Window";
+	}
+
+	//public static async void CreateTrayIcon(dynamic options) {
+	public static void CreateTrayIcon(dynamic options) {
+		var title = (string)options.title ?? "User actions";
+		var menuItems = (dynamic[])options.menuItems;
+
+		//var finalMenuItems = await Task.WhenAll(menuItems.Select(async a=> {
+		var finalMenuItems = menuItems.Select(a=> {
+			var text = a.text as string;
+			var textFunc = a.text as Func<object, Task<object>>;
+			var textFunc_async = a.text_async as Func<object, Task<object>>;
+			//var action = (string)a.action;
+			var onClick = (Func<object, Task<object>>)a.onClick;
+
+			/*if (textFunc != null)
+				// (we have to await even for the sync textFunc here, since we're in the init method, for which the js is locked waiting)
+				text = (string)await textFunc(null);
+			if (textFunc_async != null)
+				text = (string)await textFunc_async(null);*/
+
+			/*if (action == "close tray icon")
+				return new MenuItem(a.text, (EventHandler)((sender, e) => {
+					onClick(null);
+				}));*/
+			var result = new MenuItem(text, ((sender, e)=> {
+				onClick(null);
+			}));
+
+			if (textFunc != null)
+				result.SetMeta("textFunc", textFunc);
+			if (textFunc_async != null)
+				result.SetMeta("textFunc_async", textFunc_async);
+
+			return result;
+		//}).ToArray());
+		}).ToArray();
+		
+		var notifyThread = new Thread(()=>{
+			NotifyIcon icon = null;
+			Action updateTrayIconText = () => {
+				foreach (var item in icon.ContextMenu.MenuItems.OfType<MenuItem>()) {
+					var textFunc = item.GetMeta<Func<object, Task<object>>>("textFunc");
+					var textFunc_async = item.GetMeta<Func<object, Task<object>>>("textFunc_async");
+					if (textFunc != null)
+						item.Text = (string)textFunc(null).Result;
+					else if (textFunc_async != null) {
+						item.Text += " [...]";
+						Task.Run(async () => item.Text = (string)await textFunc_async(null));
+					}
+				}
+			};
+
+			icon = new NotifyIcon();
+			icon.Icon = Icon.ExtractAssociatedIcon(FileManager.csCore.GetFile("UserIcon_x16.ico").FullName);
+			icon.Visible = true;
+			icon.Text = title;
+			icon.ContextMenu = new ContextMenu(finalMenuItems);
+			icon.ContextMenu.Popup += (sender, args)=>updateTrayIconText();
+			trayIcons.Add(icon);
+
+			Task.Run(updateTrayIconText);
+
+			//UpdateTrayIconMenuItems();
+			Application.Run();
+		});
+		notifyThread.Start();
 	}
 
 	/*public class OnEvent_Class {
@@ -310,5 +424,11 @@ public static class Methods {
 		Microsoft.Win32.SystemEvents.PowerModeChanged += (sender, e) => {
 			listener(e.Mode);
 		};
+	}
+
+	public static void ShowMessageBox(dynamic options) {
+		var title = (string)options.title ?? "";
+		var message = (string)options.message;
+		MessageBox.Show(null, message, title);
 	}
 }

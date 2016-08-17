@@ -11,48 +11,54 @@ require("./Packages/General/ClassExtensions.js");
 require("./Packages/General/Globals.js");
 var V = require("./Packages/V/V.js").V;
 
-function ProcessMethodArgs(args) {
-    for (var prop in args) (function(prop) {
-        if (typeof args[prop] == "object")
-            ProcessMethodArgs(args[prop]);
-        else if (args[prop] instanceof Function) {
-            var innerHandler = args[prop];
-            args[prop] = function() {
-                var args = V.AsArray(arguments);
+function InMethodArgs_ProcessObject(obj) {
+    var processSub = sub=>{
+        if (typeof sub == "object")
+            return InMethodArgs_ProcessObject(sub);
+        if (sub instanceof Function) {
+            var func = sub;
+            return function() {
+                var argsForFunc = V.AsArray(arguments);
                 //Log("args count:" + args.length + ";" + ToJSON(args) + ";" + (typeof args[0]));
-                for (var i in args)
-                    ProcessResult(args[i]);
+                for (var i in argsForFunc)
+                    argsForFunc[i] = InResult_ProcessObject(argsForFunc[i]);
 
-                try {
-                    innerHandler.apply(null, args);
-                } catch(ex) {
-                    Log(ex.stack);
-                }
+                try { func.apply(null, argsForFunc); }
+                catch(ex) { Log(ex.stack); }
             }
         }
-    })(prop);
+        return sub;
+    };
+    if (obj instanceof Array)
+        return obj.map(processSub);
+    if (typeof obj == "object")
+        return obj.Select(processSub);
+    return obj;
 }
 
-function ProcessResult(obj) {
-    for (var prop in obj) (function(prop) {
-        if (typeof obj[prop] == "object")
-            ProcessResult(obj[prop]);
-        else if (typeof obj[prop] == "function" || obj[prop] instanceof Function) {
-            var innerFunc = obj[prop];
-            obj[prop] = function() {
-                var methodArgs = V.AsArray(arguments);
-                ProcessMethodArgs(methodArgs);
-                //Log("Calling_Early_2) " + methodName + " Args: " + methodArgs.Select(a=>a.constructor.name).JoinUsing(","));
-                //var result = innerFunc({methodName: methodName, args: methodArgs}, true);
-                var result = innerFunc(methodArgs, true);
-                if (result == "@@@NULL@@@")
-                    result = null;
-                ProcessResult(result);
-                //Log("Result4)" + result);
-                return result;
+function InResult_ProcessObject(obj) {
+    if (obj == null || obj == "@@@NULL@@@")
+        return null;
+    if (typeof obj == "object")
+        return obj.Select(sub=>{
+            if (typeof sub == "object")
+                return InResult_ProcessObject(sub);
+            if (typeof sub == "function" || sub instanceof Function) {
+                var func = sub;
+                return function() {
+                    var argsForFunc = V.AsArray(arguments);
+                    argsForFunc = InMethodArgs_ProcessObject(argsForFunc);
+                    //Log("Calling_Early_2) " + methodName + " Args: " + methodArgs.Select(a=>a.constructor.name).JoinUsing(","));
+                    //var result = innerFunc({methodName: methodName, args: methodArgs}, true);
+                    var result = func(argsForFunc, true);
+                    result = InResult_ProcessObject(result);
+                    //Log("Result4)" + result);
+                    return result;
+                }
             }
-        }
-    })(prop);
+            return sub;
+        });
+    return obj;
 }
 
 var CallMethod_Ext = edge.func({
@@ -62,12 +68,10 @@ var CallMethod_Ext = edge.func({
 });
 g.CallMethod = function(methodName, args___) {
     var methodArgs = V.Slice(arguments, 1);
-    ProcessMethodArgs(methodArgs);
+    methodArgs = InMethodArgs_ProcessObject(methodArgs);
     //Log("[JS]Calling) " + methodName + " Args: " + methodArgs.Select(a=>a.constructor.name).JoinUsing(","));
     var result = CallMethod_Ext({methodName: methodName, args: methodArgs}, true);
-    if (result == "@@@NULL@@@")
-        result = null;
-    ProcessResult(result);
+    result = InResult_ProcessObject(result);
     //Log("[JS]Returning result) " + result);
     return result;
 };
@@ -78,26 +82,30 @@ var CallMethodAsync_Ext = edge.func({
     methodName: "CallMethodAsync" // this must be Func<object,Task<object>>
 });
 g.CallMethodAsync = function(methodName, args___) {
-    var methodArgs = V.Slice(arguments, 1);
-    ProcessMethodArgs(methodArgs);
+    return new Promise((resolve, reject)=> {
+        var methodArgs = V.Slice(arguments, 1);
+        methodArgs = InMethodArgs_ProcessObject(methodArgs);
 
-    // if last argument is callback function, grab it, and remove it from argument list
-    //var callback = methodArgs.slice(-1)[0] instanceof Function ? methodArgs.splice(-1)[0] : ()=>{};
+        /*var callback = methodArgs.splice(-1)[0] || ()=>{};
+        var callbackWrapper = function(result) {
+            InResult_ProcessObject(result);
+            //Log("[JS]Returning async result) " + result);
+            callback(result);
+        };
+        //Log("[JS]Calling method async) " + methodName + " Args: " + methodArgs.Select(a=>a.constructor.name).JoinUsing(","));
+        CallMethodAsync_Ext({methodName: methodName, args: methodArgs, callback: callbackWrapper}, ()=>{});*/
 
-    // always grab last arg as callback-function (note that all it does is tell you when the entry was added to the queue)
-    /*var callback = methodArgs.splice(-1)[0] || ()=>{};
-    return CallMethodAsync_Ext({methodName: methodName, args: methodArgs}, callback);*/
-
-    //return CallMethodAsync_Ext({methodName: methodName, args: methodArgs}, ()=>{});
-
-    var callback = methodArgs.splice(-1)[0] || ()=>{};
-    var callbackWrapper = function(result) {
-        ProcessResult(result);
-        //Log("[JS]Returning async result) " + result);
-        callback(result);
-    };
-    //Log("[JS]Calling method async) " + methodName + " Args: " + methodArgs.Select(a=>a.constructor.name).JoinUsing(","));
-    return CallMethodAsync_Ext({methodName: methodName, args: methodArgs, callback: callbackWrapper}, ()=>{});
+        var callback = function(result) {
+            result = InResult_ProcessObject(result);
+            //Log("[JS]Returning async result) " + result);
+            //callback(result);
+            resolve(result);
+        };
+        //Log("[JS]Calling method async) " + methodName + " Args: " + methodArgs.Select(a=>a.constructor.name).JoinUsing(","));
+        CallMethodAsync_Ext({methodName: methodName, args: methodArgs, callback: callback}, (a,b)=>{
+            //Log("Successfully queued async method-call. (error:" + a + " result:" + b + ")");
+        });
+    });
 };
 
 g.API = require("./API.js");
@@ -108,12 +116,12 @@ for (var methodName of g.API.methodNames) (function(methodName){
 
 // special ones
 g.launchingAtStartup = process.argv.some(a=>a == "-atStartup");
-g.CreateTrayIcon = function() {
+g.CreateStandardTrayIcon = function() {
     /*var reloadFunc = function() {
         process.exit(); // just exit; C# side will have already launched a new instance of the Start.bat batch file
     };*/
     var exitFunc = function() { process.exit(); };
-    return g.CallMethod.apply(null, ["CreateTrayIcon", exitFunc].concat(V.AsArray(arguments)));
+    return g.CallMethod.apply(null, ["CreateStandardTrayIcon", exitFunc].concat(V.AsArray(arguments)));
 };
 
 fs = require("fs");
@@ -122,6 +130,9 @@ try { fs.statSync("./UserScript.js", "utf8").isFile(); }
 catch(ex) { // if file doesn't exist
     fs.createReadStream("./ScriptExamples/Default.js").pipe(fs.createWriteStream("UserScript.js"));
 }
+
+g.async = require('asyncawait/async');
+g.await = require('asyncawait/await');
 
 // user script
 // ==========

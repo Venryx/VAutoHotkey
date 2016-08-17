@@ -1,15 +1,25 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Text;
 using System.Text.RegularExpressions;
 using static System.String;
 
 public static class ClassExtensions {
+	// object
+	public static VNullClass SetMeta(this object obj, object metaKey, VNullClass metaValue, bool useStrongStorage = true) { return VMeta.main.SetMeta(obj, metaKey, metaValue, useStrongStorage); } // for null
+	public static T SetMeta<T>(this object obj, object metaKey, T metaValue, bool useStrongStorage = true) { return VMeta.main.SetMeta(obj, metaKey, metaValue, useStrongStorage); }
+	public static T GetMeta<T>(this object obj, object metaKey) { return VMeta.main.GetMeta<T>(obj, metaKey); }
+	public static object GetMeta(this object obj, object metaKey) { return VMeta.main.GetMeta(obj, metaKey); }
+	public static T GetMeta<T>(this object obj, object metaKey, T returnValueIfMissing, bool useStrongStorage = true) { return VMeta.main.GetMeta(obj, metaKey, returnValueIfMissing, useStrongStorage); }
+	public static void ClearMeta(this object obj, bool useStrongStorage = true) { VMeta.main.ClearMeta(obj, useStrongStorage); }
+
 	// string
 	public static string TrimStart(this string s, int length) { return s.Substring(length); }
 	public static string TrimEnd(this string s, int length) { return s.Substring(0, s.Length - length); }
@@ -52,6 +62,17 @@ public static class ClassExtensions {
 			return s.Any(itemMatchFunc) ? (T?)s.First(itemMatchFunc) : null;
 		return s.Any() ? (T?)s.First() : null;
 	}*/
+	public static List<Item<T>> Items<T>(this List<T> s) {
+		var result = new List<Item<T>>();
+		for (var i = 0; i < s.Count; i++)
+			result.Add(new Item<T>(i, s[i]));
+		return result;
+	}
+	public class Item<T> {
+		public Item(int index, T item) { this.index = index; this.item = item; }
+		public int index;
+		public T item;
+	}
 
 	// List<T>
 	//public static T GetValueOrX<T>(this List<T> s, int index, T defaultValue = default(T)) { return index >= 0 && index < s.Count ? s[index] : defaultValue; }
@@ -125,4 +146,6 @@ public static class ClassExtensions {
 		var parentId = (uint)queryObj["ParentProcessId"];
 		return Process.GetProcessById((int)parentId);
 	}
+	//public static string GetCommandLine(this Process process) {
+	//public static string GetArgsStr(this Process process) { return Processes.GetArgsStr(process.Id); }
 }

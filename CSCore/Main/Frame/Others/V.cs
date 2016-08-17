@@ -11,21 +11,41 @@ using static V;
 public class Map_Dynamic : DynamicObject {
 	IDictionary<string, object> source;
 	public Map_Dynamic() : this(new ExpandoObject()) {}
+	//public Map_Dynamic() : this(new Dictionary<string, object>()) {}
 	public Map_Dynamic(IDictionary<string, object> source) { this.source = source; }
+
 	public object GetProperty(string name) {
 		/*var type = _source.GetType();
 		var property = type.GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 		return property?.GetValue(_source, null);*/
-		return source.GetValueOrX(name);
+		return source.GetValueOrX(name); 
 	}
+	public void SetProperty(string name, object value) { source[name] = value; }
+
 	public override bool TryGetMember(GetMemberBinder binder, out object result) {
 		result = GetProperty(binder.Name);
 		return true;
 	}
-	public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result) {
+	public override bool TrySetMember(SetMemberBinder binder, object value) {
+		source[binder.Name] = value;
+		return true;
+	}
+
+	/*public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result) {
 		result = GetProperty((string)indexes[0]);
 		return true;
 	}
+	public override bool TrySetIndex(SetIndexBinder binder, object[] indexes, object value) {
+		source[(string)indexes[0]] = value;
+		return true;
+	}*/
+	/*public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result) {
+		return source.TryGetValue("Property" + (int)indexes[0], out result);
+	}
+	public override bool TrySetIndex(SetIndexBinder binder, object[] indexes, object value) {
+		source["Property" + (int)indexes[0]] = value;
+		return true;
+	}*/
 
 	public static implicit operator Dictionary<string, object>(Map_Dynamic s) { return new Dictionary<string, object>(s.source); } 
 }

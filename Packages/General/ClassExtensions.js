@@ -133,6 +133,48 @@ function SimplifyType(type) {
 	return type;
 }
 
+// like Pairs for Dictionary, except for Object
+Object.prototype._AddGetter_Inline = function Props() {
+	var result = [];
+	var i = 0;
+	for (var propName in this)
+		result.push({name: propName, value: this[propName], index: i++});
+	return result;
+};
+
+// like "map" for Array, except for Object
+Object.prototype._AddFunction_Inline = function Select(transformer) {
+	var result = {};
+	var i = 0;
+	for (var propName in this)
+		result[propName] = transformer(this[propName]);
+	return result;
+};
+
+// Function
+// ==========
+
+/*Function.prototype._AddFunction_Inline = function AsAsync() {
+	var userFunc = this;
+	return function(data, callback) {
+		var error = null;
+		var result = null;
+		try { result = userFunc(data); }
+		catch (ex) { error = ex; }
+		callback(error, result);
+	};
+}*/
+Function.prototype._AddFunction_Inline = function AsAsync() {
+	var userFunc = async(this);
+	return async (function(data, callback) {
+		var error = null;
+		var result = null;
+		try { result = await (userFunc(data)); }
+		catch (ex) { error = ex; }
+		callback(error, result);
+	});
+}
+
 // String
 // ==========
 

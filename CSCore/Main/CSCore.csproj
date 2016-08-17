@@ -48,9 +48,13 @@
   <ItemGroup>
     <Compile Include="Frame\Others\ClassExtensions.cs" />
     <Compile Include="Frame\Others\FileManager.cs" />
+    <Compile Include="Frame\Others\Processes_NTQuery.cs" />
     <Compile Include="Frame\Others\WindowEnums.cs" />
+    <Compile Include="Frame\Others\Processes.cs" />
     <Compile Include="Frame\Others\Windows.cs" />
     <Compile Include="Frame\SystemEvents.cs" />
+    <Compile Include="Frame\VMeta\VMeta.cs" />
+    <Compile Include="Frame\VMeta\VWeakReference.cs" />
     <Compile Include="Frame\VTypeInfo.cs" />
     <Compile Include="HookManager\GlobalEventProvider.cs" />
     <Compile Include="HookManager\HookManager.Callbacks.cs" />

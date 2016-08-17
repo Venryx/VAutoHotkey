@@ -35,16 +35,6 @@ public static class Windows {
 public class Window {
 	public Window(IntPtr handle) {
 		this.handle = handle;
-		Show = async args=>Show_();
-		Hide = async args=>Hide_();
-		Activate = async args=>Activate_();
-		GetText = async args=>GetText_();
-		GetClass = async args=>GetClass_();
-		GetProcessPath = async args=>GetProcessPath_();
-		GetProcessName = async args=>GetProcessName_();
-		GetProcessID = async args=>GetProcessID_();
-		GetThreadID = async args=>GetThreadID_();
-		IsVisible = async args=>IsVisible_();
 		SetPosition = async args=>SetPosition_(Main.ProcessArgs(args)[0]);
 		SetSize = async args=>SetSize_(Main.ProcessArgs(args)[0]);
 		SetPositionAndSize = async args=>SetPositionAndSize_(Main.ProcessArgs(args)[0]);
@@ -177,26 +167,25 @@ public class Window {
 
 	public Func<object, Task<object>> GetClass;
 	public string GetClass_() {
-		var builder = new StringBuilder();
-		var success = GetClassName(handle, builder, 1024);
+		var builder = new StringBuilder(1024);
+		GetClassName(handle, builder, builder.Capacity);
 		return builder.ToString();
 	}
 
-	[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)] static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
-
-	public Func<object, Task<object>> GetProcessPath;
+	[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)] static extern void GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+	
+	/*public Func<object, Task<object>> GetProcessPath;
 	public string GetProcessPath_() {
 		/*var builder = new StringBuilder(1024);
 		//int pathLength = GetModuleFileName((IntPtr)GetProcessID_(), builder, builder.Capacity);
 		return builder.ToString();*/
 
 		/*var process = Process.GetProcessById((int)GetProcessID_());
-		return process.MainModule.FileName;*/
+		return process.MainModule.FileName;*#/
 
-		int capacity = 1024;
-		StringBuilder pathBuilder = new StringBuilder(capacity);
+		StringBuilder pathBuilder = new StringBuilder(1024);
 		IntPtr hProcess = OpenProcess(ProcessAccessFlags.QueryLimitedInformation, false, (int)GetProcessID_());
-		int pathLength = GetModuleFileNameEx(hProcess, IntPtr.Zero, pathBuilder, capacity);
+		int pathLength = GetModuleFileNameEx(hProcess, IntPtr.Zero, pathBuilder, pathBuilder.Capacity);
 		CloseHandle(hProcess);
 		var fullPath = pathBuilder.ToString();
 		//Log("FullPath)" + fullPath);
@@ -216,41 +205,25 @@ public class Window {
 		uint processID = 0;
 		uint threadID = GetWindowThreadProcessId(handle, out processID);
 		return processID;
+	}*/
+
+	public Func<object, Task<object>> GetProcess;
+	public VProcess GetProcess_() {
+		int processID;
+		/*int threadID =*/ GetWindowThreadProcessId(handle, out processID);
+		return new VProcess(processID);
 	}
 
 	public Func<object, Task<object>> GetThreadID;
-	public uint GetThreadID_() {
-		uint processID = 0;
-		uint threadID = GetWindowThreadProcessId(handle, out processID);
+	public int GetThreadID_() {
+		int processID;
+		int threadID = GetWindowThreadProcessId(handle, out processID);
 		return threadID;
 	}
 
-	[DllImport("user32", SetLastError = true)] static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+	//[DllImport("user32", SetLastError = true)] static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+	[DllImport("user32", SetLastError = true)] static extern int GetWindowThreadProcessId(IntPtr hWnd, out int lpdwProcessId);
 	//[DllImport("kernel32", SetLastError = true)] static extern int GetModuleFileName(IntPtr hModule, StringBuilder lpFilename, int nSize);
-
-	[DllImport("psapi.dll", SetLastError = true)] static extern int GetModuleFileNameEx(IntPtr processHandle, IntPtr moduleHandle, StringBuilder pathBuilder, int pathSize);
-	[Flags] public enum ProcessAccessFlags : uint {
-		All = 0x001F0FFF,
-		Terminate = 0x00000001,
-		CreateThread = 0x00000002,
-		VirtualMemoryOperation = 0x00000008,
-		VirtualMemoryRead = 0x00000010,
-		VirtualMemoryWrite = 0x00000020,
-		DuplicateHandle = 0x00000040,
-		CreateProcess = 0x000000080,
-		SetQuota = 0x00000100,
-		SetInformation = 0x00000200,
-		QueryInformation = 0x00000400,
-		QueryLimitedInformation = 0x00001000,
-		Synchronize = 0x00100000
-	}
-	[DllImport("kernel32.dll", SetLastError = true)] public static extern IntPtr OpenProcess(ProcessAccessFlags processAccess, bool bInheritHandle, int processId);
-	[DllImport("kernel32.dll", SetLastError = true)]
-	[ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-	[SuppressUnmanagedCodeSecurity] [return: MarshalAs(UnmanagedType.Bool)]
-	static extern bool CloseHandle(IntPtr hObject);
-
-	//[DllImport("kernel32.dll", SetLastError = true)] static extern bool QueryFullProcessImageName([In] IntPtr hProcess, [In] int dwFlags, [Out] StringBuilder lpExeName, ref int lpdwSize);
 
 	public Func<object, Task<object>> SetPosition;
 	public bool SetPosition_(dynamic options) {
