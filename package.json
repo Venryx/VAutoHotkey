@@ -1,16 +1,8 @@
 {
-  "name": "robotjs",
-  "version": "0.4.4",
-  "description": "Node.js Desktop Automation.",
-  "main": "index.js",
-  "scripts": {
-    "test": "node test/all.js",
-    "install": "prebuild --install"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/octalmage/robotjs.git"
-  },
+  "name": "vautohotkey",
+  "version": "0.0.1",
+  "description": "Automation program similar to AutoHotkey, except with a C# core, and a JavaScript (NodeJS) scripting engine.",
+  "main": "Start.js",
   "keywords": [
     "Automation",
     "GUI",
@@ -29,47 +21,18 @@
     "color"
   ],
   "author": {
-    "name": "Jason Stallings"
+    "name": "Venryx"
   },
   "license": "MIT",
-  "gypfile": true,
-  "bugs": {
-    "url": "https://github.com/octalmage/robotjs/issues"
-  },
-  "homepage": "https://github.com/octalmage/robotjs",
+  "homepage": "https://github.com/Venryx/VAutoHotkey",
   "dependencies": {
     "asyncawait": "^1.0.6",
     "edge": "~5.9.2",
     "nan": "~2.2.1",
-    "prebuild": "~4.1.1"
+    "prebuild": "~4.1.1",
+    "robotjs": "^0.4.5"
   },
   "devDependencies": {
     "tape": "~3.5.0"
-  },
-  "gitHead": "483b46d16cebc4a30f7b26be0090f9da7b441f97",
-  "_id": "robotjs@0.4.4",
-  "_shasum": "a0295b5ca9030d08426eb1d754a670c49c24d3af",
-  "_from": "robotjs@*",
-  "_npmVersion": "3.8.9",
-  "_nodeVersion": "6.2.0",
-  "_npmUser": {
-    "name": "octalmage",
-    "email": "jason@stallin.gs"
-  },
-  "dist": {
-    "shasum": "a0295b5ca9030d08426eb1d754a670c49c24d3af",
-    "tarball": "https://registry.npmjs.org/robotjs/-/robotjs-0.4.4.tgz"
-  },
-  "maintainers": [
-    {
-      "name": "octalmage",
-      "email": "jason@stallin.gs"
-    }
-  ],
-  "_npmOperationalInternal": {
-    "host": "packages-12-west.internal.npmjs.com",
-    "tmp": "tmp/robotjs-0.4.4.tgz_1464742014894_0.899560026358813"
-  },
-  "directories": {},
-  "_resolved": "https://registry.npmjs.org/robotjs/-/robotjs-0.4.4.tgz"
+  }
 }
